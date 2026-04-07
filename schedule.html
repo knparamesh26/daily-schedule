@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<title>Paramesh's Schedule</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+
+  :root {
+    --bg: #f2f4f8;
+    --card: #ffffff;
+    --border: #e8eaf0;
+    --text-primary: #1a1d2e;
+    --text-secondary: #6b7280;
+    --text-muted: #adb5c4;
+
+    --work: #3b82f6;
+    --work-bg: #eff6ff;
+    --prep: #8b5cf6;
+    --prep-bg: #f5f3ff;
+    --health: #22c55e;
+    --health-bg: #f0fdf4;
+    --routine: #f59e0b;
+    --routine-bg: #fffbeb;
+
+    --done: #22c55e;
+    --done-bg: #f0fdf4;
+    --skip: #ef4444;
+    --skip-bg: #fef2f2;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
+
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-pill: 99px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 90px;
+  }
+
+  /* ── HEADER ── */
+  #header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .app-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .app-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    margin-top: 1px;
+  }
+
+  .history-back {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .history-back span {
+    color: var(--prep);
+    cursor: pointer;
+    font-weight: 700;
+    text-decoration: none;
+    background: var(--prep-bg);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+  }
+
+  .clock-block {
+    text-align: right;
+  }
+  .clock {
+    font-family: 'Nunito', sans-serif;
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .clock-date {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  /* Progress ring area */
+  .progress-ring-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .progress-ring-wrap {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+  }
+  .progress-ring-wrap svg {
+    transform: rotate(-90deg);
+  }
+  .progress-ring-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    color: var(--text-primary);
+  }
+  .progress-details {
+    flex: 1;
+  }
+  .progress-main-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .progress-sub-label {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .progress-bar {
+    height: 5px;
+    background: var(--border);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    margin-top: 7px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+    border-radius: var(--radius-pill);
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    border-top: 1px solid var(--border);
+    margin: 0 -16px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 11px 0;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    background: transparent;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    letter-spacing: 0.2px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab-btn.active {
+    color: var(--prep);
+    border-bottom-color: var(--prep);
+    background: linear-gradient(to bottom, transparent, var(--prep-bg));
+  }
+
+  /* ── SCHEDULE ── */
+  #schedule-tab { padding: 14px 14px 0; }
+
+  .section-date-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+
+  .act-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1.5px solid var(--border);
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .act-card.is-current {
+    box-shadow: var(--shadow-md);
+  }
+  .act-card.is-done {
+    background: #fcfffe;
+    border-color: #d1fae5;
+  }
+  .act-card.is-skip {
+    background: #fffcfc;
+    border-color: #fee2e2;
+  }
+
+  .act-row {
+    padding: 13px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    min-height: 60px;
+  }
+
+  .act-time {
+    min-width: 60px;
+    text-align: right;
+  }
+  .act-time-start {
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+  .act-time-end {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .act-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--border);
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+
+  .act-icon-wrap {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .act-info { flex: 1; min-width: 0; }
+  .act-name {
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .act-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .cat-pill {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: var(--radius-pill);
+  }
+
+  .now-badge {
+    font-size: 8px;
+    background: var(--prep);
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: var(--radius-pill);
+    font-weight: 800;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    animation: pulse-badge 2s ease-in-out infinite;
+  }
+  @keyframes pulse-badge {
+    0%,100%{opacity:1} 50%{opacity:0.7}
+  }
+
+  .act-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .status-ring {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    transition: all 0.15s;
+  }
+  .status-ring.done {
+    background: var(--done);
+    border-color: var(--done);
+    color: #fff;
+  }
+  .status-ring.skip {
+    background: var(--skip);
+    border-color: var(--skip);
+    color: #fff;
+  }
+  .chevron {
+    font-size: 10px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+  }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* Expand */
+  .act-expand {
+    border-top: 1px solid var(--border);
+    padding: 14px;
+    animation: slideDown 0.18s ease;
+    background: #fafbfc;
+  }
+  @keyframes slideDown {
+    from{opacity:0;transform:translateY(-4px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  .act-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+
+  .act-btns {
+    display: flex;
+    gap: 8px;
+  }
+  .act-btns button {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--card);
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+  .act-btns button.btn-done {
+    background: var(--done-bg);
+    color: var(--done);
+    border-color: #bbf7d0;
+  }
+  .act-btns button.btn-skip {
+    background: var(--skip-bg);
+    color: var(--skip);
+    border-color: #fecaca;
+  }
+
+  /* Cab toggle */
+  .cab-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .cab-type-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .cab-type-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--card);
+    color: var(--text-secondary);
+    transition: all 0.15s;
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .cab-type-btn.active-studied {
+    border-color: #c4b5fd;
+    background: var(--prep-bg);
+    color: var(--prep);
+  }
+  .cab-type-btn.active-travelled {
+    border-color: #d1d5db;
+    background: #f9fafb;
+    color: var(--text-secondary);
+  }
+  .cab-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ── ANALYSIS ── */
+  #analysis-tab { padding: 14px 14px 0; }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stat-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px;
+    box-shadow: var(--shadow-sm);
+    border: 1.5px solid var(--border);
+  }
+  .stat-icon { font-size: 20px; margin-bottom: 6px; }
+  .stat-val {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+  .stat-lbl {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  .section-box {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+    border: 1.5px solid var(--border);
+  }
+  .section-title {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .cat-row { margin-bottom: 14px; }
+  .cat-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .cat-bar {
+    height: 7px;
+    background: var(--bg);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+  .cat-fill {
+    height: 100%;
+    border-radius: var(--radius-pill);
+    transition: width 0.7s cubic-bezier(.4,0,.2,1);
+  }
+
+  .prep-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 7px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+  }
+  .prep-item-icon { font-size: 16px; }
+  .prep-item-info { flex: 1; }
+  .prep-item-name { font-size: 13px; font-weight: 700; }
+  .prep-item-dur { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .prep-status {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+  }
+
+  .insight-box {
+    border-radius: var(--radius);
+    padding: 16px;
+    background: linear-gradient(135deg, #f5f3ff, #eff6ff);
+    border: 1.5px solid #ddd6fe;
+    margin-bottom: 12px;
+  }
+  .insight-icon { font-size: 18px; margin-bottom: 6px; }
+  .insight-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--prep);
+    margin-bottom: 5px;
+  }
+  .insight-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .reset-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid #fecaca;
+    background: var(--skip-bg);
+    color: var(--skip);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .reset-btn:hover { background: #fee2e2; }
+
+  /* ── HISTORY ── */
+  #history-tab { padding: 14px 14px 0; }
+
+  .hist-week-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    justify-content: space-between;
+  }
+  .hist-day-pill {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 4px;
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .hist-day-pill.today {
+    border-color: #c4b5fd;
+    background: var(--prep-bg);
+  }
+  .hist-ring-wrap {
+    position: relative;
+    width: 34px;
+    height: 34px;
+  }
+  .hist-ring-wrap svg { transform: rotate(-90deg); }
+  .hist-ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text-primary);
+  }
+  .hist-day-name {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  .hist-list-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 14px;
+    border-radius: var(--radius);
+    margin-bottom: 7px;
+    cursor: pointer;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.15s;
+  }
+  .hist-list-item.today-item { border-color: #c4b5fd; }
+  .hist-day-block { min-width: 48px; }
+  .hist-day-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+  }
+  .hist-day-date { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .hist-bar-wrap { flex: 1; }
+  .hist-bar {
+    height: 6px;
+    background: var(--bg);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+  .hist-fill { height: 100%; border-radius: var(--radius-pill); }
+  .hist-right { text-align: right; }
+  .hist-pct {
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+  }
+  .hist-count { font-size: 10px; color: var(--text-muted); }
+  .hist-note {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 12px;
+    padding-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="header-top">
+    <div>
+      <div class="app-label">Daily Planner</div>
+      <div class="app-title">Paramesh's Schedule</div>
+      <div class="history-back" id="history-back" style="display:none">
+        Viewing: <strong id="history-back-label" style="color:var(--text-secondary)"></strong>
+        <span onclick="exitHistory()">← Today</span>
+      </div>
+    </div>
+    <div class="clock-block">
+      <div class="clock" id="clock">--:--</div>
+      <div class="clock-date" id="clock-date"></div>
+    </div>
+  </div>
+
+  <div class="progress-ring-row">
+    <div class="progress-ring-wrap">
+      <svg width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="26" r="21" fill="none" stroke="#e8eaf0" stroke-width="5"/>
+        <circle cx="26" cy="26" r="21" fill="none" stroke="url(#ringGrad)" stroke-width="5"
+          stroke-linecap="round"
+          id="progress-circle"
+          style="stroke-dasharray:131.9;stroke-dashoffset:131.9;transition:stroke-dashoffset 0.5s cubic-bezier(.4,0,.2,1)"/>
+        <defs>
+          <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#8b5cf6"/>
+            <stop offset="100%" stop-color="#3b82f6"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="progress-ring-text" id="progress-pct">0%</div>
+    </div>
+    <div class="progress-details">
+      <div class="progress-main-label" id="progress-label">0 of 18 completed</div>
+      <div class="progress-sub-label" id="progress-sub">0 skipped · 18 remaining</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('schedule')" id="tab-schedule">📋 Schedule</button>
+    <button class="tab-btn" onclick="switchTab('analysis')" id="tab-analysis">📊 Analysis</button>
+    <button class="tab-btn" onclick="switchTab('history')" id="tab-history">📅 History</button>
+  </div>
+</div>
+
+<div id="schedule-tab"></div>
+<div id="analysis-tab" style="display:none"></div>
+<div id="history-tab" style="display:none"></div>
+
+<script>
+const SCHEDULE_WEEKDAY = [
+  { id:1,  time:"06:15", label:"Wake Up",             duration:20,  category:"routine", icon:"☀️",  desc:"Freshen up & get ready to head out" },
+  { id:2,  time:"06:35", label:"Exercise",            duration:40,  category:"health",  icon:"🏋️", desc:"Workout / stretching / yoga — non-negotiable!" },
+  { id:3,  time:"07:15", label:"Get Ready",           duration:20,  category:"routine", icon:"🚿",  desc:"Bath, dress up, pack bag" },
+  { id:4,  time:"07:35", label:"DSA Practice",        duration:55,  category:"prep",    icon:"💡",  desc:"Solve 1–2 DSA problems (LeetCode / GFG) — best time, fresh brain" },
+  { id:5,  time:"08:50", label:"Cab → Office",        duration:55,  category:"prep",    icon:"🚕",  desc:"Read on phone — React/TS articles, revision notes. Light reading, no coding.", cabType:true },
+  { id:6,  time:"09:45", label:"Breakfast @ Office",  duration:20,  category:"routine", icon:"🍽️", desc:"Only meal of the morning — eat well, hydrate" },
+  { id:7,  time:"10:05", label:"Office Work",         duration:260, category:"work",    icon:"💼",  desc:"Deep work block — meetings, coding, deliverables" },
+  { id:8,  time:"14:25", label:"Lunch Break",         duration:35,  category:"routine", icon:"🥗",  desc:"Lunch + short walk outside — step away from screen" },
+  { id:9,  time:"15:00", label:"Office Work",         duration:210, category:"work",    icon:"💼",  desc:"Afternoon block — wrap up tasks, plan handovers before 6:30" },
+  { id:10, time:"18:30", label:"Cab → Home",          duration:45,  category:"prep",    icon:"🚕",  desc:"Read on phone — TypeScript, system design, or re-read today's DSA solution", cabType:true },
+  { id:11, time:"19:15", label:"Freshen Up",          duration:15,  category:"routine", icon:"🚿",  desc:"Unwind, change, hydrate — mental reset before prep" },
+  { id:12, time:"19:30", label:"React Deep Dive",     duration:50,  category:"prep",    icon:"⚛️",  desc:"Hooks, patterns, performance, interview Q&A — most asked topic" },
+  { id:13, time:"20:20", label:"Dinner",              duration:30,  category:"routine", icon:"🍛",  desc:"Dinner — step away, rest your eyes for 30 mins" },
+  { id:14, time:"20:50", label:"Machine Coding",      duration:45,  category:"prep",    icon:"🖥️", desc:"Build a UI component or mini feature — simulate real interview conditions" },
+  { id:15, time:"21:35", label:"TypeScript / Misc",   duration:35,  category:"prep",    icon:"🔷",  desc:"TS generics, utility types, JS internals, web perf, accessibility" },
+  { id:16, time:"22:10", label:"Revision & Notes",    duration:20,  category:"prep",    icon:"📝",  desc:"Jot 5 bullet points of today's key learnings — builds long-term retention" },
+  { id:17, time:"22:30", label:"Wind Down",           duration:30,  category:"routine", icon:"🌙",  desc:"No screens — light reading, calm down, prep for sleep" },
+  { id:18, time:"23:00", label:"Sleep",               duration:390, category:"health",  icon:"😴",  desc:"6.5 hrs — consistent wake time matters more than total hours" },
+];
+
+const SCHEDULE_SATURDAY = [
+  { id:1,  time:"07:30", label:"Wake Up",              duration:20,  category:"routine", icon:"☀️",  desc:"Slower morning, no rush" },
+  { id:2,  time:"07:50", label:"Exercise",             duration:50,  category:"health",  icon:"🏋️", desc:"Full workout — more time than weekdays" },
+  { id:3,  time:"08:40", label:"Get Ready",            duration:20,  category:"routine", icon:"🚿",  desc:"Bath & freshen up" },
+  { id:4,  time:"09:00", label:"Breakfast",            duration:30,  category:"routine", icon:"🍳",  desc:"Cook & eat properly — no office rush" },
+  { id:5,  time:"09:30", label:"DSA Deep Dive",        duration:90,  category:"prep",    icon:"💡",  desc:"2–3 problems, understand patterns fully — no time pressure" },
+  { id:6,  time:"11:00", label:"Break",                duration:20,  category:"free",    icon:"☕",  desc:"Walk, coffee, stretch" },
+  { id:7,  time:"11:20", label:"React / System Design",duration:90,  category:"prep",    icon:"⚛️",  desc:"Build a project feature or study architecture patterns" },
+  { id:8,  time:"12:50", label:"Lunch",                duration:60,  category:"routine", icon:"🍛",  desc:"Proper meal + rest, no screen" },
+  { id:9,  time:"13:50", label:"Machine Coding",       duration:60,  category:"prep",    icon:"🖥️", desc:"Full timed component build — simulate interview" },
+  { id:10, time:"14:50", label:"TypeScript / JS",      duration:40,  category:"prep",    icon:"🔷",  desc:"Generics, utility types, internals — whatever was weak this week" },
+  { id:11, time:"15:30", label:"Free Time",            duration:90,  category:"free",    icon:"🎮",  desc:"Guilt-free — games, social, errands, Netflix" },
+  { id:12, time:"17:00", label:"Errands / Chores",     duration:60,  category:"routine", icon:"🛒",  desc:"Grocery, laundry, weekly reset" },
+  { id:13, time:"18:00", label:"Dinner",               duration:30,  category:"routine", icon:"🍽️", desc:"Early dinner — long evening ahead" },
+  { id:14, time:"18:30", label:"Weekly Review",        duration:40,  category:"prep",    icon:"📝",  desc:"What did I learn this week? What needs work?" },
+  { id:15, time:"19:10", label:"Reading / Chill",      duration:50,  category:"free",    icon:"📖",  desc:"Tech blog, book, or just wind down" },
+  { id:16, time:"20:00", label:"Family / Social",      duration:60,  category:"free",    icon:"👨‍👩‍👧", desc:"Calls, time with people that matter" },
+  { id:17, time:"21:00", label:"Wind Down",            duration:30,  category:"routine", icon:"🌙",  desc:"No prep, no screens — prep for sleep" },
+  { id:18, time:"21:30", label:"Sleep",                duration:420, category:"health",  icon:"😴",  desc:"7 hrs — weekend catch-up matters" },
+];
+
+const SCHEDULE_SUNDAY = [
+  { id:1,  time:"07:00", label:"Wake Up",             duration:20,  category:"routine", icon:"☀️",  desc:"Slightly earlier — prep for the week" },
+  { id:2,  time:"07:20", label:"Exercise",            duration:40,  category:"health",  icon:"🏋️", desc:"Light yoga or jog — active recovery" },
+  { id:3,  time:"08:00", label:"Get Ready",           duration:20,  category:"routine", icon:"🚿",  desc:"" },
+  { id:4,  time:"08:20", label:"Breakfast",           duration:30,  category:"routine", icon:"🍳",  desc:"Calm, slow breakfast" },
+  { id:5,  time:"08:50", label:"DSA Practice",        duration:60,  category:"prep",    icon:"💡",  desc:"1–2 problems, focus on revision not new topics" },
+  { id:6,  time:"09:50", label:"Mock Interview",      duration:90,  category:"prep",    icon:"🎯",  desc:"Full simulated front-end interview — DSA + React + TS + HR" },
+  { id:7,  time:"11:20", label:"Break",               duration:30,  category:"free",    icon:"☕",  desc:"Decompress after mock" },
+  { id:8,  time:"11:50", label:"Mock Debrief",        duration:60,  category:"prep",    icon:"📝",  desc:"Fix weak spots identified in the mock — targeted revision" },
+  { id:9,  time:"12:50", label:"Lunch",               duration:60,  category:"routine", icon:"🍛",  desc:"Rest properly" },
+  { id:10, time:"13:50", label:"React Revision",      duration:30,  category:"prep",    icon:"⚛️",  desc:"Quick scan of last week's React notes" },
+  { id:11, time:"14:20", label:"TS Revision",         duration:30,  category:"prep",    icon:"🔷",  desc:"Quick scan of TS notes" },
+  { id:12, time:"14:50", label:"Free Time",           duration:70,  category:"free",    icon:"🎮",  desc:"Completely off — recharge for the week" },
+  { id:13, time:"16:00", label:"Errands / Prep",      duration:60,  category:"routine", icon:"🛒",  desc:"Pack bag, plan Monday morning, laundry" },
+  { id:14, time:"17:00", label:"Dinner",              duration:30,  category:"routine", icon:"🍽️", desc:"Early dinner" },
+  { id:15, time:"17:30", label:"Weekly Plan",         duration:30,  category:"prep",    icon:"📋",  desc:"Set goals for the coming week — DSA topics, React areas, mock goals" },
+  { id:16, time:"18:00", label:"Family / Social",     duration:60,  category:"free",    icon:"👨‍👩‍👧", desc:"Calls, relax with people" },
+  { id:17, time:"19:00", label:"Light Reading",       duration:30,  category:"free",    icon:"📖",  desc:"Non-tech — fiction, news, calm the mind" },
+  { id:18, time:"19:30", label:"Wind Down",           duration:30,  category:"routine", icon:"🌙",  desc:"No screens, breathe — early start Monday" },
+  { id:19, time:"20:00", label:"Sleep",               duration:450, category:"health",  icon:"😴",  desc:"7.5 hrs — best investment before a Monday" },
+];
+
+const PREP_TOPICS_WEEKDAY = [
+  { id:4,  label:"Morning DSA",     icon:"💡" },
+  { id:5,  label:"Cab → Office",    icon:"🚕" },
+  { id:10, label:"Cab → Home",      icon:"🚕" },
+  { id:12, label:"React Deep Dive", icon:"⚛️" },
+  { id:14, label:"Machine Coding",  icon:"🖥️" },
+  { id:15, label:"TS / Misc",       icon:"🔷" },
+  { id:16, label:"Revision Notes",  icon:"📝" },
+];
+
+const PREP_TOPICS_SATURDAY = [
+  { id:5,  label:"DSA Deep Dive",         icon:"💡" },
+  { id:7,  label:"React / System Design", icon:"⚛️" },
+  { id:9,  label:"Machine Coding",        icon:"🖥️" },
+  { id:10, label:"TypeScript / JS",       icon:"🔷" },
+  { id:14, label:"Weekly Review",         icon:"📝" },
+];
+
+const PREP_TOPICS_SUNDAY = [
+  { id:5,  label:"DSA Practice",  icon:"💡" },
+  { id:6,  label:"Mock Interview",icon:"🎯" },
+  { id:8,  label:"Mock Debrief",  icon:"📝" },
+  { id:10, label:"React Revision",icon:"⚛️" },
+  { id:11, label:"TS Revision",   icon:"🔷" },
+  { id:15, label:"Weekly Plan",   icon:"📋" },
+];
+
+const CAT = {
+  work:    { color:"#3b82f6", bg:"#eff6ff", border:"#bfdbfe", label:"Work" },
+  prep:    { color:"#8b5cf6", bg:"#f5f3ff", border:"#ddd6fe", label:"Prep" },
+  health:  { color:"#22c55e", bg:"#f0fdf4", border:"#bbf7d0", label:"Health" },
+  routine: { color:"#f59e0b", bg:"#fffbeb", border:"#fde68a", label:"Routine" },
+  free:    { color:"#ec4899", bg:"#fdf2f8", border:"#fbcfe8", label:"Free" },
+};
+
+function getDayOfWeek(dateStr) {
+  return new Date(dateStr + "T00:00:00").getDay(); // 0=Sun, 6=Sat
+}
+
+function getScheduleFor(dateStr) {
+  const dow = getDayOfWeek(dateStr);
+  if (dow === 6) return SCHEDULE_SATURDAY;
+  if (dow === 0) return SCHEDULE_SUNDAY;
+  return SCHEDULE_WEEKDAY;
+}
+
+function getPrepTopicsFor(dateStr) {
+  const dow = getDayOfWeek(dateStr);
+  if (dow === 6) return PREP_TOPICS_SATURDAY;
+  if (dow === 0) return PREP_TOPICS_SUNDAY;
+  return PREP_TOPICS_WEEKDAY;
+}
+
+function isWeekend(dateStr) {
+  const dow = getDayOfWeek(dateStr);
+  return dow === 0 || dow === 6;
+}
+
+// Current active schedule (changes based on viewed date)
+function SCHEDULE() { return getScheduleFor(getViewDate()); }
+
+let allData = {};
+let expandedId = null;
+let currentTab = "schedule";
+let viewDate = null;
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function getViewDate() { return viewDate || todayStr(); }
+function save() { try { localStorage.setItem("sched_v3", JSON.stringify(allData)); } catch{} }
+function load() { try { const r = localStorage.getItem("sched_v3"); if(r) allData = JSON.parse(r); } catch{} }
+function timeToMins(t) { const [h,m] = t.split(":").map(Number); return h*60+m; }
+function minsToTime(m) { const h=Math.floor(m/60)%24, mn=m%60; return `${String(h).padStart(2,"0")}:${String(mn).padStart(2,"0")}`; }
+function fmtDur(m) { if(m<60) return m+"m"; const h=Math.floor(m/60),r=m%60; return r?`${h}h ${r}m`:`${h}h`; }
+
+function getDayData(date) {
+  if (!allData[date]) allData[date] = { done:{}, skip:{}, cabMode:{} };
+  if (!allData[date].cabMode) allData[date].cabMode = {};
+  return allData[date];
+}
+function isDone(id) { return !!getDayData(getViewDate()).done[id]; }
+function isSkip(id) { return !!getDayData(getViewDate()).skip[id]; }
+function getCabMode(id) { return getDayData(getViewDate()).cabMode[id]; }
+
+function toggle(id, type) {
+  const d = getDayData(getViewDate());
+  if (type === "done") { d.done[id] = !d.done[id]; d.skip[id] = false; }
+  else                 { d.skip[id] = !d.skip[id]; d.done[id] = false; }
+  save(); renderAll();
+}
+
+function setCabMode(id, mode) {
+  const d = getDayData(getViewDate());
+  d.cabMode[id] = d.cabMode[id] === mode ? undefined : mode;
+  if (d.cabMode[id] === "travelled") { d.done[id] = true; d.skip[id] = false; }
+  else if (d.cabMode[id] === "studied") { d.done[id] = true; d.skip[id] = false; }
+  else { d.done[id] = false; }
+  save(); renderAll();
+}
+
+function getNowMins() { const n=new Date(); return n.getHours()*60+n.getMinutes(); }
+
+function getCurrentId() {
+  if (getViewDate() !== todayStr()) return null;
+  const nm = getNowMins();
+  for (const a of SCHEDULE()) {
+    const s = timeToMins(a.time);
+    if (nm >= s && nm < s + a.duration) return a.id;
+  }
+  return null;
+}
+
+function isPrepDone(id) {
+  const act = SCHEDULE().find(a => a.id === id);
+  if (!act) return false;
+  if (act.cabType) { return getCabMode(id) === "studied"; }
+  return isDone(id);
+}
+
+function getStats() {
+  const sched = SCHEDULE();
+  const totalDone = sched.filter(a => isDone(a.id)).length;
+  const totalSkip = sched.filter(a => isSkip(a.id)).length;
+  const pct = Math.round((totalDone / sched.length) * 100);
+  const prepActs = sched.filter(a => a.category === "prep");
+  const prepMins = prepActs.reduce((s,a) => s+a.duration, 0);
+  const prepDone = prepActs.filter(a => isPrepDone(a.id)).reduce((s,a) => s+a.duration, 0);
+  return { totalDone, totalSkip, pct, prepMins, prepDone, total: sched.length };
+}
+
+function updateClock() {
+  const n = new Date();
+  document.getElementById("clock").textContent =
+    `${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
+  document.getElementById("clock-date").textContent =
+    n.toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"});
+}
+setInterval(() => { updateClock(); renderAll(); }, 30000);
+updateClock();
+
+function switchTab(tab) {
+  currentTab = tab;
+  ["schedule","analysis","history"].forEach(t => {
+    document.getElementById(`tab-${t}`).className = "tab-btn" + (t===tab?" active":"");
+    document.getElementById(`${t}-tab`).style.display = t===tab?"block":"none";
+  });
+  if (tab !== "schedule") expandedId = null;
+  renderAll();
+}
+
+function exitHistory() {
+  viewDate = null;
+  document.getElementById("history-back").style.display = "none";
+  switchTab("schedule");
+}
+
+function viewHistoryDate(date) {
+  viewDate = date === todayStr() ? null : date;
+  if (viewDate) {
+    document.getElementById("history-back").style.display = "flex";
+    document.getElementById("history-back-label").textContent =
+      new Date(date+"T00:00:00").toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"short"});
+  } else {
+    document.getElementById("history-back").style.display = "none";
+  }
+  switchTab("schedule");
+}
+
+function renderAll() {
+  updateProgress();
+  if (currentTab === "schedule") renderSchedule();
+  if (currentTab === "analysis") renderAnalysis();
+  if (currentTab === "history")  renderHistory();
+}
+
+function updateProgress() {
+  const { totalDone, totalSkip, pct, total } = getStats();
+  const remaining = total - totalDone - totalSkip;
+  const vd = getViewDate();
+  const dow = getDayOfWeek(vd);
+  const dayType = dow===6?"Saturday":dow===0?"Sunday":"";
+  const labelSuffix = dayType ? ` · ${dayType}` : "";
+  document.getElementById("progress-label").textContent = `${totalDone} of ${total} completed${labelSuffix}`;
+  document.getElementById("progress-sub").textContent = `${totalSkip} skipped · ${remaining} remaining`;
+  document.getElementById("progress-pct").textContent = pct + "%";
+
+  const color = pct>=70?"#22c55e":pct>=40?"#f59e0b":"#8b5cf6";
+  document.getElementById("progress-pct").style.color = color;
+
+  const circumference = 131.9;
+  const offset = circumference - (pct / 100) * circumference;
+  document.getElementById("progress-circle").style.strokeDashoffset = offset;
+  document.getElementById("progress-fill").style.width = pct + "%";
+}
+
+function renderSchedule() {
+  const container = document.getElementById("schedule-tab");
+  const currentId = getCurrentId();
+  const nm = getNowMins();
+  const isToday = getViewDate() === todayStr();
+  const vd = getViewDate();
+  const dow = getDayOfWeek(vd);
+  const isWknd = dow === 0 || dow === 6;
+  const dayLabel = isToday
+    ? (isWknd ? (dow===6?"Saturday — Recharge + Deep Prep":"Sunday — Mock + Revision + Reset") : "Today's Tasks")
+    : (isWknd ? (dow===6?"Saturday Schedule":"Sunday Schedule") : "Weekday Schedule");
+
+  container.innerHTML = `<div class="section-date-label">${dayLabel}</div>`;
+
+  SCHEDULE().forEach(act => {
+    const endM = timeToMins(act.time) + act.duration;
+    const isCurrent = act.id === currentId;
+    const done = isDone(act.id);
+    const skip = isSkip(act.id);
+    const isPast = isToday && endM < nm;
+    const meta = CAT[act.category];
+    const open = expandedId === act.id;
+    const cabMode = act.cabType ? getCabMode(act.id) : null;
+
+    const card = document.createElement("div");
+    card.className = `act-card${isCurrent?" is-current":""}${done?" is-done":""}${skip?" is-skip":""}`;
+    if (isCurrent) card.style.borderColor = meta.color;
+
+    const nameColor = done?"var(--done)":skip?"var(--skip)":isPast&&!isCurrent?"var(--text-muted)":"var(--text-primary)";
+    const timeColor = isCurrent ? meta.color : isPast&&!done&&!skip?"var(--text-muted)":"var(--text-primary)";
+
+    let statusRingHtml = `<div class="status-ring${done?" done":skip?" skip":""}">
+      ${done?"✓":skip?"✕":""}
+    </div>`;
+
+    let cabBadge = "";
+    if (act.cabType && cabMode === "studied") cabBadge = `<span style="font-size:9px;background:var(--prep-bg);color:var(--prep);padding:2px 7px;border-radius:99px;font-weight:800;letter-spacing:0.5px;border:1px solid #ddd6fe;">📚 Studied</span>`;
+    if (act.cabType && cabMode === "travelled") cabBadge = `<span style="font-size:9px;background:#f9fafb;color:var(--text-muted);padding:2px 7px;border-radius:99px;font-weight:800;letter-spacing:0.5px;border:1px solid var(--border);">🚕 Travelled</span>`;
+
+    let expandHtml = "";
+    if (open) {
+      expandHtml = `<div class="act-expand">
+        <div class="act-desc">📌 ${act.desc}</div>
+        ${act.cabType ? `
+        <div>
+          <div class="cab-label">How was the ride?</div>
+          <div class="cab-type-row">
+            <button class="cab-type-btn ${cabMode==='studied'?'active-studied':''}" onclick="event.stopPropagation();setCabMode(${act.id},'studied')">📚 Studied</button>
+            <button class="cab-type-btn ${cabMode==='travelled'?'active-travelled':''}" onclick="event.stopPropagation();setCabMode(${act.id},'travelled')">🚕 Just Travelled</button>
+          </div>
+          <div class="cab-hint">
+            ${cabMode==='studied'?"✅ Counts towards prep progress":""}
+            ${cabMode==='travelled'?"✅ Marked done · won't affect prep %":""}
+            ${!cabMode?"Select to mark this cab ride":""}
+          </div>
+        </div>
+        ` : `
+        <div class="act-btns">
+          <button class="${done?'btn-done':''}" onclick="event.stopPropagation();toggle(${act.id},'done')">${done?"✅ Done":"Mark Done"}</button>
+          <button class="${skip?'btn-skip':''}" onclick="event.stopPropagation();toggle(${act.id},'skip')">${skip?"⛔ Skipped":"Skip"}</button>
+        </div>
+        `}
+      </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="act-row" onclick="toggleExpand(${act.id})">
+        <div class="act-time">
+          <div class="act-time-start" style="color:${timeColor}">${act.time}</div>
+          <div class="act-time-end">${minsToTime(endM)}</div>
+        </div>
+        <div class="act-divider"></div>
+        <div class="act-icon-wrap" style="background:${meta.bg}">${act.icon}</div>
+        <div class="act-info">
+          <div class="act-name" style="color:${nameColor};text-decoration:${skip?"line-through":"none"}">
+            ${act.label}
+            ${isCurrent?'<span class="now-badge">NOW</span>':""}
+            ${cabBadge}
+          </div>
+          <div class="act-meta">
+            <span>${fmtDur(act.duration)}</span>
+            <span>·</span>
+            <span class="cat-pill" style="background:${meta.bg};color:${meta.color};border:1px solid ${meta.border}">${meta.label}</span>
+          </div>
+        </div>
+        <div class="act-right">
+          ${statusRingHtml}
+          <span class="chevron${open?' open':''}">▾</span>
+        </div>
+      </div>
+      ${expandHtml}
+    `;
+    container.appendChild(card);
+  });
+}
+
+function toggleExpand(id) {
+  expandedId = expandedId === id ? null : id;
+  renderSchedule();
+}
+
+function renderAnalysis() {
+  const { totalDone, totalSkip, pct, prepMins, prepDone, total } = getStats();
+  const remaining = total - totalDone - totalSkip;
+  const sched = SCHEDULE();
+  const prepTopics = getPrepTopicsFor(getViewDate());
+
+  const catRows = Object.entries(CAT).map(([cat, meta]) => {
+    const items = sched.filter(a => a.category === cat);
+    if (!items.length) return "";
+    const done  = items.filter(a => isDone(a.id)).length;
+    const tM    = items.reduce((s,a)=>s+a.duration,0);
+    const dM    = items.filter(a => isDone(a.id)).reduce((s,a)=>s+a.duration,0);
+    const p     = Math.round((done/items.length)*100);
+    return `<div class="cat-row">
+      <div class="cat-header">
+        <span style="color:${meta.color};font-weight:700;display:flex;align-items:center;gap:5px">
+          <span class="cat-pill" style="background:${meta.bg};color:${meta.color};border:1px solid ${meta.border}">${meta.label}</span>
+        </span>
+        <span style="color:var(--text-muted);font-size:11px">${done}/${items.length} · ${fmtDur(dM)}/${fmtDur(tM)}</span>
+      </div>
+      <div class="cat-bar"><div class="cat-fill" style="width:${p}%;background:${meta.color}"></div></div>
+    </div>`;
+  }).join("");
+
+  const prepRows = prepTopics.map(p => {
+    const act  = sched.find(a => a.id === p.id);
+    const done = isPrepDone(p.id);
+    const skip = isSkip(p.id);
+    const cabMode = act?.cabType ? getCabMode(p.id) : null;
+
+    let statusText = done?"Done":skip?"Skipped":"Pending";
+    let statusBg   = done?"#dcfce7":skip?"#fee2e2":"#f3f4f6";
+    let statusColor= done?"#16a34a":skip?"#dc2626":"#9ca3af";
+    let nameColor  = done?"var(--done)":skip?"var(--skip)":"var(--text-primary)";
+    let itemBg     = done?"#f0fdf4":skip?"#fef2f2":"var(--bg)";
+
+    if (act?.cabType && cabMode === "travelled") {
+      statusText="Travelled"; statusBg="#f3f4f6"; statusColor="#6b7280"; nameColor="var(--text-secondary)"; itemBg="var(--bg)";
+    } else if (act?.cabType && cabMode === "studied") {
+      statusText="Studied ✓"; statusBg="#f5f3ff"; statusColor="#7c3aed"; nameColor="var(--prep)"; itemBg="#faf5ff";
+    } else if (act?.cabType && !cabMode) {
+      statusText="Not set"; statusBg="#f3f4f6"; statusColor="#9ca3af";
+    }
+
+    return `<div class="prep-item" style="background:${itemBg}">
+      <span class="prep-item-icon">${p.icon}</span>
+      <div class="prep-item-info">
+        <div class="prep-item-name" style="color:${nameColor}">${p.label}</div>
+        <div class="prep-item-dur">${act?fmtDur(act.duration):""}</div>
+      </div>
+      <div class="prep-status" style="background:${statusBg};color:${statusColor}">${statusText}</div>
+    </div>`;
+  }).join("");
+
+  const vdForInsight = getViewDate();
+  const dowInsight = getDayOfWeek(vdForInsight);
+  const isWkndInsight = dowInsight === 0 || dowInsight === 6;
+  const insight = isWkndInsight
+    ? (pct>=80?"Weekend crushed! Rest now — you've earned it fully."
+      :pct>=50?"Solid weekend progress! Mock + free time balance is working."
+      :pct>=20?"Weekend prep beats nothing — keep going, the mock block is the key one."
+      :"Weekends compound your edge. Even 2–3 prep blocks now pays off all week.")
+    : (pct>=80?"Outstanding! Keep this momentum — consistency beats intensity."
+      :pct>=50?"Good progress! Evening prep blocks are your biggest differentiator."
+      :pct>=20?"Day's not over — show up for the evening blocks. That's where it counts."
+      :"Fresh start! Even 3 prep blocks today compounds massively over weeks.");
+
+  document.getElementById("analysis-tab").innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card" style="border-color:#bbf7d0"><div class="stat-icon">✅</div><div class="stat-val" style="color:var(--done)">${totalDone}</div><div class="stat-lbl">Completed</div></div>
+      <div class="stat-card" style="border-color:#fecaca"><div class="stat-icon">⛔</div><div class="stat-val" style="color:var(--skip)">${totalSkip}</div><div class="stat-lbl">Skipped</div></div>
+      <div class="stat-card" style="border-color:#fde68a"><div class="stat-icon">⏳</div><div class="stat-val" style="color:#f59e0b">${remaining}</div><div class="stat-lbl">Pending</div></div>
+      <div class="stat-card" style="border-color:#ddd6fe"><div class="stat-icon">🎯</div><div class="stat-val" style="color:var(--prep)">${fmtDur(prepDone)}/${fmtDur(prepMins)}</div><div class="stat-lbl">Prep Done</div></div>
+    </div>
+    <div class="section-box"><div class="section-title">By Category</div>${catRows}</div>
+    <div class="section-box"><div class="section-title">Prep Topics</div>${prepRows}</div>
+    <div class="insight-box">
+      <div class="insight-icon">🚀</div>
+      <div class="insight-title">Today's Insight</div>
+      <div class="insight-text">${insight}</div>
+    </div>
+    <button class="reset-btn" onclick="resetToday()">🔄 Reset Today's Progress</button>
+  `;
+}
+
+function renderHistory() {
+  const today = todayStr();
+
+  const weekRings = Array.from({length:7},(_,i) => {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    const sched = getScheduleFor(k);
+    const dd = allData[k] || { done:{} };
+    const done = sched.filter(a => dd.done?.[a.id]).length;
+    const p = Math.round((done/sched.length)*100);
+    const dow = getDayOfWeek(k);
+    const isWknd = dow===0||dow===6;
+    const label = i===0?"T":d.toLocaleDateString("en-IN",{weekday:"short"}).slice(0,2);
+    const circumference = 94.2;
+    const offset = circumference - (p/100)*circumference;
+    const color = p>=70?"#22c55e":p>=40?"#f59e0b":"#8b5cf6";
+    return `<div class="hist-day-pill${k===today?' today':''}" onclick="viewHistoryDate('${k}')">
+      <div class="hist-ring-wrap">
+        <svg width="34" height="34" viewBox="0 0 34 34">
+          <circle cx="17" cy="17" r="15" fill="none" stroke="${isWknd?'#fbcfe8':'#e8eaf0'}" stroke-width="3.5"/>
+          <circle cx="17" cy="17" r="15" fill="none" stroke="${color}" stroke-width="3.5"
+            stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="hist-ring-label" style="color:${p>0?color:'var(--text-muted)'}">${p>0?p+'%':'-'}</div>
+      </div>
+      <div class="hist-day-name" style="color:${k===today?'var(--prep)':isWknd?'#ec4899':'var(--text-muted)'}">${label}</div>
+    </div>`;
+  }).join("");
+
+  const listRows = Array.from({length:7},(_,i) => {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    const sched = getScheduleFor(k);
+    const dd = allData[k] || { done:{}, skip:{} };
+    const done = sched.filter(a => dd.done?.[a.id]).length;
+    const p = Math.round((done/sched.length)*100);
+    const label = i===0?"Today":d.toLocaleDateString("en-IN",{weekday:"short"});
+    const dow = getDayOfWeek(k);
+    const isWknd = dow===0||dow===6;
+    const fillColor = p>=70?"#22c55e":p>=40?"#f59e0b":"#8b5cf6";
+    const pctColor  = p>=70?"var(--done)":p>=40?"#f59e0b":"var(--prep)";
+    const wkndTag = isWknd ? `<span style="font-size:9px;background:#fdf2f8;color:#ec4899;padding:1px 6px;border-radius:99px;font-weight:700;border:1px solid #fbcfe8;margin-left:5px">${dow===6?'Sat':'Sun'}</span>` : "";
+    return `<div class="hist-list-item${k===today?' today-item':''}" onclick="viewHistoryDate('${k}')">
+      <div class="hist-day-block">
+        <div class="hist-day-label" style="color:${k===today?'var(--prep)':'var(--text-primary)'}; display:flex; align-items:center">${label}${wkndTag}</div>
+        <div class="hist-day-date">${k.slice(5)} · ${sched.length} tasks</div>
+      </div>
+      <div class="hist-bar-wrap">
+        <div class="hist-bar"><div class="hist-fill" style="width:${p}%;background:${fillColor}"></div></div>
+      </div>
+      <div class="hist-right">
+        <div class="hist-pct" style="color:${pctColor}">${p}%</div>
+        <div class="hist-count">${done}/${sched.length}</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("history-tab").innerHTML = `
+    <div style="font-size:10px;font-weight:800;color:var(--text-muted);margin-bottom:12px;letter-spacing:2px;text-transform:uppercase;">This Week</div>
+    <div class="hist-week-row">${weekRings}</div>
+    <div style="font-size:10px;font-weight:800;color:var(--text-muted);margin-bottom:10px;letter-spacing:2px;text-transform:uppercase;">Last 7 Days</div>
+    ${listRows}
+    <div class="hist-note">Tap any day to view its schedule</div>
+  `;
+}
+
+function resetToday() {
+  if (confirm("Reset today's progress?")) {
+    delete allData[todayStr()];
+    save(); renderAll();
+  }
+}
+
+load();
+renderAll();
+switchTab("schedule");
+</script>
+</body>
+</html>
