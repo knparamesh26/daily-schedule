@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Light mode tokens ─────────────────────────────────── */
+:root {
+  --c-bg:           249 249 255;   /* #f9f9ff */
+  --c-surface:      249 249 255;
+  --c-surf-lowest:  255 255 255;   /* #ffffff */
+  --c-surf-low:     240 243 255;   /* #f0f3ff */
+  --c-surf:         231 238 254;   /* #e7eefe */
+  --c-surf-high:    226 232 248;   /* #e2e8f8 */
+  --c-surf-highest: 220 226 243;   /* #dce2f3 */
+  --c-on-surf:      21 28 39;      /* #151c27 */
+  --c-on-surf-var:  70 69 85;      /* #464555 */
+  --c-outline:      119 117 135;   /* #777587 */
+  --c-outline-var:  199 196 216;   /* #c7c4d8 */
+  --c-primary:      53 37 205;     /* #3525cd */
+  --c-on-primary:   255 255 255;
+  --c-secondary:    92 95 96;      /* #5c5f60 */
+  --c-on-secondary: 255 255 255;
+  --c-error:        186 26 26;
+  --c-on-error:     255 255 255;
+  --c-err-container:    255 218 214;
+  --c-on-err-container: 147 0 10;
+}
+
+/* ── Dark mode tokens ──────────────────────────────────── */
+.dark {
+  --c-bg:           16 18 30;
+  --c-surface:      21 24 38;
+  --c-surf-lowest:  14 16 26;
+  --c-surf-low:     27 31 50;
+  --c-surf:         35 40 62;
+  --c-surf-high:    43 49 74;
+  --c-surf-highest: 52 59 88;
+  --c-on-surf:      235 241 255;   /* #ebf1ff */
+  --c-on-surf-var:  199 196 216;   /* #c7c4d8 */
+  --c-outline:      148 145 163;
+  --c-outline-var:  70 69 85;      /* #464555 */
+  --c-primary:      195 192 255;   /* #c3c0ff - inverse-primary */
+  --c-on-primary:   15 0 105;      /* #0f0069 */
+  --c-secondary:    197 199 200;   /* #c5c7c8 */
+  --c-on-secondary: 25 28 29;      /* #191c1d */
+  --c-error:        255 180 171;
+  --c-on-error:     105 0 5;
+  --c-err-container:    147 0 10;
+  --c-on-err-container: 255 218 214;
+}
+
+/* ── Global ────────────────────────────────────────────── */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  user-select: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(var(--c-surf-highest));
+  border-radius: 10px;
+}
