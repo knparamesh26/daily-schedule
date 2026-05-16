@@ -3,6 +3,7 @@ import type { View, Project } from '../types';
 const NAV_ITEMS: { view: View; icon: string; label: string }[] = [
   { view: 'dashboard', icon: 'grid_view',      label: 'Dashboard' },
   { view: 'calendar',  icon: 'calendar_month', label: 'Calendar'  },
+  { view: 'tasks',     icon: 'task_alt',       label: 'Tasks'     },
   { view: 'projects',  icon: 'folder',         label: 'Projects'  },
   { view: 'history',   icon: 'history',        label: 'History'   },
   { view: 'settings',  icon: 'settings',       label: 'Settings'  },

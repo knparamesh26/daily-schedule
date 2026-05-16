@@ -1,7 +1,7 @@
 export type Status = 'todo' | 'in_progress' | 'done';
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 export type View =
-  | 'dashboard' | 'calendar' | 'projects' | 'project-detail'
+  | 'dashboard' | 'calendar' | 'tasks' | 'projects' | 'project-detail'
   | 'add-task' | 'edit-task' | 'task-detail'
   | 'history' | 'settings';
 export type HistoryAction = 'created' | 'updated' | 'completed' | 'deleted';
