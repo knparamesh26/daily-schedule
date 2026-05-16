@@ -267,15 +267,6 @@ export default function App() {
         </div>
       </main>
 
-      {view === 'dashboard' && (
-        <button
-          onClick={() => { setEditingTask(undefined); setView('add-task'); }}
-          className="fixed bottom-margin right-margin bg-primary text-on-primary w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all duration-150 z-50"
-        >
-          <span className="material-symbols-outlined">add</span>
-        </button>
-      )}
-
       {showProjectModal && (
         <NewProjectModal
           project={editingProject}
