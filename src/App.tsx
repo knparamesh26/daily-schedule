@@ -22,6 +22,7 @@ import Settings from './views/Settings';
 import Projects from './views/Projects';
 import ProjectDetail from './views/ProjectDetail';
 import NewProjectModal from './components/NewProjectModal';
+import Tasks from './views/Tasks';
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -107,10 +108,14 @@ export default function App() {
 
   const handleMoveToProject = async (projectName: string) => {
     if (!selectedTaskId) return;
+    await handleAssignProject(selectedTaskId, projectName);
+  };
+
+  const handleAssignProject = async (taskId: string, projectName: string) => {
     const projectId = projects.find(p => p.name === projectName)?.id ?? null;
-    await updateTaskProject(selectedTaskId, projectId);
-    const entry = await addHistoryEntry(selectedTaskId, tasks.find(t => t.id === selectedTaskId)?.name ?? '', 'updated');
-    setTasks(prev => prev.map(t => t.id === selectedTaskId ? { ...t, project: projectName } : t));
+    await updateTaskProject(taskId, projectId);
+    const entry = await addHistoryEntry(taskId, tasks.find(t => t.id === taskId)?.name ?? '', 'updated');
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, project: projectName } : t));
     setHistory(prev => [entry, ...prev]);
   };
 
@@ -156,6 +161,14 @@ export default function App() {
 
   const openNewProject = () => { setEditingProject(undefined); setShowProjectModal(true); };
   const openEditProject = () => { setEditingProject(selectedProject); setShowProjectModal(true); };
+
+  const handleDeleteProjectById = async (id: string) => {
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+    await deleteProject(id);
+    setProjects(prev => prev.filter(p => p.id !== id));
+    setTasks(prev => prev.filter(t => t.project !== project.name));
+  };
 
   const navigate = useCallback((v: View) => { setEditingTask(undefined); setView(v); }, []);
 
@@ -213,9 +226,12 @@ export default function App() {
 
         <div className="flex-1">
           {view === 'dashboard' && (
-            <Dashboard tasks={tasks} projects={projects} search={search} onViewTask={handleViewTask}
+            <Dashboard tasks={tasks} projects={projects} history={history} search={search} onViewTask={handleViewTask}
               onAddTask={() => { setEditingTask(undefined); setView('add-task'); }}
               displayName={settings.displayName} />
+          )}
+          {view === 'tasks' && (
+            <Tasks tasks={tasks} projects={projects} onViewTask={handleViewTask} onAssignProject={handleAssignProject} />
           )}
           {view === 'calendar' && (
             <Calendar tasks={tasks} onViewTask={handleViewTask}
@@ -228,6 +244,7 @@ export default function App() {
               tasks={tasks}
               onOpenProject={id => { setSelectedProjectId(id); setView('project-detail'); }}
               onNewProject={openNewProject}
+              onDeleteProject={handleDeleteProjectById}
             />
           )}
           {view === 'project-detail' && selectedProject && (
