@@ -1,11 +1,11 @@
 import type { View, Project } from '../types';
 
 const NAV_ITEMS: { view: View; icon: string; label: string }[] = [
-  { view: 'dashboard', icon: 'dashboard',      label: 'Dashboard' },
+  { view: 'dashboard', icon: 'grid_view',      label: 'Dashboard' },
   { view: 'calendar',  icon: 'calendar_month', label: 'Calendar'  },
-  { view: 'add-task',  icon: 'add_circle',     label: 'Add Task'  },
-  { view: 'history',   icon: 'history',         label: 'History'   },
-  { view: 'settings',  icon: 'settings',        label: 'Settings'  },
+  { view: 'projects',  icon: 'folder',         label: 'Projects'  },
+  { view: 'history',   icon: 'history',        label: 'History'   },
+  { view: 'settings',  icon: 'settings',       label: 'Settings'  },
 ];
 
 interface Props {
@@ -19,82 +19,82 @@ interface Props {
 
 export default function Sidebar({ currentView, onNavigate, projects, selectedProjectId, onOpenProject, onNewProject }: Props) {
   return (
-    <aside className="w-[260px] h-screen fixed left-0 top-0 bg-surface shadow-sm flex flex-col py-xl px-md z-50">
+    <aside className="w-[260px] h-screen fixed left-0 top-0 flex flex-col py-xl px-md z-50" style={{ backgroundColor: '#0f1729' }}>
+      {/* Brand */}
       <div className="mb-xl px-sm">
-        <h1 className="text-headline-md font-bold text-primary tracking-tight">TaskStream</h1>
-        <p className="text-body-md text-on-surface-variant opacity-70">Productivity Workspace</p>
+        <h1 className="text-headline-md font-bold text-white tracking-tight">TaskStream</h1>
+        <p className="text-body-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>Productivity Workspace</p>
       </div>
 
-      <nav className="space-y-xs">
+      {/* Main nav */}
+      <nav className="space-y-[8px]">
         {NAV_ITEMS.map(item => {
-          const active = item.view === currentView;
+          const active = item.view === currentView ||
+            (item.view === 'projects' && currentView === 'project-detail');
           return (
             <button
               key={item.view}
               onClick={() => onNavigate(item.view)}
-              className={`w-full flex items-center gap-md px-md py-sm rounded transition-colors duration-150 text-left
+              className={`w-full flex items-center gap-sm px-md py-[6px] rounded transition-all duration-150 text-left
                 ${active
-                  ? 'text-primary font-bold border-r-2 border-primary bg-surface-container-low'
-                  : 'text-on-surface-variant hover:bg-surface-container-low hover:text-primary'
+                  ? 'bg-primary text-white font-semibold'
+                  : 'text-white/60 hover:bg-white/[0.07] hover:text-white/90'
                 }`}
             >
-              <span className="material-symbols-outlined">{item.icon}</span>
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
               <span className="text-body-md">{item.label}</span>
             </button>
           );
         })}
       </nav>
 
-      {/* Projects section */}
-      <div className="mt-lg pt-lg border-t border-outline-variant flex-1 flex flex-col min-h-0">
-        <div className="flex items-center justify-between px-sm mb-sm">
-          <button
-            onClick={() => onNavigate('projects')}
-            className={`text-label-md font-semibold transition-colors ${currentView === 'projects' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'}`}
-          >
-            Projects
-          </button>
-          <button
-            onClick={onNewProject}
-            className="text-on-surface-variant hover:text-primary transition-colors p-xs rounded"
-            title="New project"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-          </button>
+      {/* Projects list */}
+      {projects.length > 0 && (
+        <div className="mt-lg pt-lg border-t border-white/10 flex-1 flex flex-col min-h-0">
+          <div className="flex items-center justify-between px-sm mb-sm">
+            <span className="text-label-sm font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              Projects
+            </span>
+            <button
+              onClick={onNewProject}
+              className="text-white/40 hover:text-white/80 transition-colors p-xs rounded"
+              title="New project"
+            >
+              <span className="material-symbols-outlined text-[16px]">add</span>
+            </button>
+          </div>
+
+          <div className="space-y-[2px] overflow-y-auto flex-1">
+            {projects.map(project => {
+              const active = currentView === 'project-detail' && selectedProjectId === project.id;
+              return (
+                <button
+                  key={project.id}
+                  onClick={() => onOpenProject(project.id)}
+                  className={`w-full flex items-center gap-sm px-md py-sm rounded-lg transition-all duration-150 text-left
+                    ${active
+                      ? 'bg-white/10 text-white font-semibold'
+                      : 'text-white/55 hover:bg-white/[0.07] hover:text-white/85'
+                    }`}
+                >
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: project.color }} />
+                  <span className="text-body-md truncate">{project.name}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+      )}
 
-        <div className="space-y-xs overflow-y-auto flex-1">
-          {projects.map(project => {
-            const active = currentView === 'project-detail' && selectedProjectId === project.id;
-            return (
-              <button
-                key={project.id}
-                onClick={() => onOpenProject(project.id)}
-                className={`w-full flex items-center gap-sm px-md py-sm rounded transition-colors duration-150 text-left
-                  ${active
-                    ? 'bg-surface-container-low text-primary font-semibold border-r-2 border-primary'
-                    : 'text-on-surface-variant hover:bg-surface-container-low hover:text-primary'
-                  }`}
-              >
-                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: project.color }} />
-                <span className="text-body-md truncate">{project.name}</span>
-              </button>
-            );
-          })}
-
-          {projects.length === 0 && (
-            <p className="text-label-sm text-on-surface-variant/50 px-md py-sm">No projects yet</p>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-auto pt-md border-t border-outline-variant">
+      {/* New Project button */}
+      <div className="mt-auto pt-md border-t border-white/10">
         <button
           onClick={onNewProject}
-          className="w-full flex items-center justify-center gap-sm bg-primary text-on-primary py-md rounded hover:opacity-90 active:scale-95 transition-all duration-150"
+          className="w-full flex items-center justify-center gap-sm py-[6px] rounded text-label-md font-medium transition-all duration-150 hover:bg-white/[0.07]"
+          style={{ color: 'rgba(255,255,255,0.55)' }}
         >
-          <span className="material-symbols-outlined">add</span>
-          <span className="text-label-md">New Project</span>
+          <span className="material-symbols-outlined text-[18px]">add</span>
+          New Project
         </button>
       </div>
     </aside>
