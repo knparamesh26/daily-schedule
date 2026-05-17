@@ -31,6 +31,7 @@ export default function App() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
+  const [appError, setAppError] = useState('');
 
   const [view, setView] = useState<View>('dashboard');
   const [editingTask, setEditingTask] = useState<Task | undefined>();
@@ -60,7 +61,7 @@ export default function App() {
         setHistory(h);
         setSettings(s);
       })
-      .catch(console.error)
+      .catch(err => setAppError(err instanceof Error ? err.message : 'Failed to load data.'))
       .finally(() => setLoading(false));
   }, [session]);
 
@@ -69,41 +70,61 @@ export default function App() {
     document.documentElement.classList.toggle('dark', settings.darkMode);
   }, [settings.darkMode]);
 
-  const selectedTask = tasks.find(t => t.id === selectedTaskId);
+  const selectedTask    = tasks.find(t => t.id === selectedTaskId);
   const selectedProject = projects.find(p => p.id === selectedProjectId);
 
   // ── Task handlers ──────────────────────────────────────────────────────────
 
   const handleSave = async (data: Omit<Task, 'id'>) => {
-    const projectId = projects.find(p => p.name === data.project)?.id ?? null;
-    if (editingTask) {
-      await updateTask(editingTask.id, data, projectId);
-      const action: HistoryEntry['action'] =
-        data.status === 'done' && editingTask.status !== 'done' ? 'completed' : 'updated';
-      const entry = await addHistoryEntry(editingTask.id, data.name, action);
-      setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...data, id: t.id } : t));
-      setHistory(prev => [entry, ...prev]);
-    } else {
-      const newTask = await createTask(data, projectId);
-      const entry = await addHistoryEntry(newTask.id, data.name, 'created');
-      setTasks(prev => [...prev, newTask]);
-      setHistory(prev => [entry, ...prev]);
+    try {
+      const projectId = projects.find(p => p.name === data.project)?.id ?? null;
+      if (editingTask) {
+        await updateTask(editingTask.id, data, projectId);
+        const action: HistoryEntry['action'] =
+          data.status === 'done' && editingTask.status !== 'done' ? 'completed' : 'updated';
+        const entry = await addHistoryEntry(editingTask.id, data.name, action);
+        setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...data, id: t.id } : t));
+        setHistory(prev => [entry, ...prev]);
+      } else {
+        const newTask = await createTask(data, projectId);
+        const entry = await addHistoryEntry(newTask.id, data.name, 'created');
+        setTasks(prev => [...prev, newTask]);
+        setHistory(prev => [entry, ...prev]);
+      }
+      setEditingTask(undefined);
+      setView(selectedProjectId ? 'project-detail' : 'dashboard');
+    } catch (err) {
+      setAppError(err instanceof Error ? err.message : 'Failed to save task.');
     }
-    setEditingTask(undefined);
-    setView(selectedProjectId ? 'project-detail' : 'dashboard');
   };
 
-  const handleEdit = (task: Task) => { setEditingTask(task); setView('edit-task'); };
+  const handleEdit     = (task: Task) => { setEditingTask(task); setView('edit-task'); };
   const handleViewTask = (id: string) => { setSelectedTaskId(id); setView('task-detail'); };
 
   const handleMarkDone = async () => {
     if (!selectedTaskId) return;
     const task = tasks.find(t => t.id === selectedTaskId);
     if (!task || task.status === 'done') return;
-    await updateTaskStatus(selectedTaskId, 'done');
-    const entry = await addHistoryEntry(task.id, task.name, 'completed');
-    setTasks(prev => prev.map(t => t.id === selectedTaskId ? { ...t, status: 'done' } : t));
-    setHistory(prev => [entry, ...prev]);
+    try {
+      await updateTaskStatus(selectedTaskId, 'done');
+      const entry = await addHistoryEntry(task.id, task.name, 'completed');
+      setTasks(prev => prev.map(t => t.id === selectedTaskId ? { ...t, status: 'done' } : t));
+      setHistory(prev => [entry, ...prev]);
+    } catch (err) {
+      setAppError(err instanceof Error ? err.message : 'Failed to update task.');
+    }
+  };
+
+  const handleAssignProject = async (taskId: string, projectName: string) => {
+    try {
+      const projectId = projects.find(p => p.name === projectName)?.id ?? null;
+      await updateTaskProject(taskId, projectId);
+      const entry = await addHistoryEntry(taskId, tasks.find(t => t.id === taskId)?.name ?? '', 'updated');
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, project: projectName } : t));
+      setHistory(prev => [entry, ...prev]);
+    } catch (err) {
+      setAppError(err instanceof Error ? err.message : 'Failed to assign project.');
+    }
   };
 
   const handleMoveToProject = async (projectName: string) => {
@@ -111,23 +132,19 @@ export default function App() {
     await handleAssignProject(selectedTaskId, projectName);
   };
 
-  const handleAssignProject = async (taskId: string, projectName: string) => {
-    const projectId = projects.find(p => p.name === projectName)?.id ?? null;
-    await updateTaskProject(taskId, projectId);
-    const entry = await addHistoryEntry(taskId, tasks.find(t => t.id === taskId)?.name ?? '', 'updated');
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, project: projectName } : t));
-    setHistory(prev => [entry, ...prev]);
-  };
-
   const handleDelete = async () => {
     if (!selectedTaskId) return;
     const task = tasks.find(t => t.id === selectedTaskId);
     if (!task) return;
-    await deleteTask(selectedTaskId);
-    const entry = await addHistoryEntry(task.id, task.name, 'deleted');
-    setTasks(prev => prev.filter(t => t.id !== selectedTaskId));
-    setHistory(prev => [entry, ...prev]);
-    setView(selectedProjectId ? 'project-detail' : 'dashboard');
+    try {
+      await deleteTask(selectedTaskId);
+      const entry = await addHistoryEntry(task.id, task.name, 'deleted');
+      setTasks(prev => prev.filter(t => t.id !== selectedTaskId));
+      setHistory(prev => [entry, ...prev]);
+      setView(selectedProjectId ? 'project-detail' : 'dashboard');
+    } catch (err) {
+      setAppError(err instanceof Error ? err.message : 'Failed to delete task.');
+    }
   };
 
   // ── Project handlers ───────────────────────────────────────────────────────
@@ -136,7 +153,6 @@ export default function App() {
     if (editingProject) {
       await updateProject(editingProject.id, data);
       setProjects(prev => prev.map(p => p.id === editingProject.id ? { ...data, id: p.id } : p));
-      // If project name changed, update local task state (project_id FK handles DB side)
       if (data.name !== editingProject.name) {
         setTasks(prev => prev.map(t =>
           t.project === editingProject.name ? { ...t, project: data.name } : t
@@ -152,38 +168,56 @@ export default function App() {
 
   const handleDeleteProject = async () => {
     if (!selectedProjectId || !selectedProject) return;
-    await deleteProject(selectedProjectId); // tasks cascade to null via FK, then we clean up
-    setProjects(prev => prev.filter(p => p.id !== selectedProjectId));
-    setTasks(prev => prev.filter(t => t.project !== selectedProject.name));
-    setSelectedProjectId(null);
-    setView('projects');
+    try {
+      await deleteProject(selectedProjectId);
+      setProjects(prev => prev.filter(p => p.id !== selectedProjectId));
+      setTasks(prev => prev.filter(t => t.project !== selectedProject.name));
+      setSelectedProjectId(null);
+      setView('projects');
+    } catch (err) {
+      setAppError(err instanceof Error ? err.message : 'Failed to delete project.');
+    }
   };
-
-  const openNewProject = () => { setEditingProject(undefined); setShowProjectModal(true); };
-  const openEditProject = () => { setEditingProject(selectedProject); setShowProjectModal(true); };
 
   const handleDeleteProjectById = async (id: string) => {
     const project = projects.find(p => p.id === id);
     if (!project) return;
-    await deleteProject(id);
-    setProjects(prev => prev.filter(p => p.id !== id));
-    setTasks(prev => prev.filter(t => t.project !== project.name));
+    try {
+      await deleteProject(id);
+      setProjects(prev => prev.filter(p => p.id !== id));
+      setTasks(prev => prev.filter(t => t.project !== project.name));
+    } catch (err) {
+      setAppError(err instanceof Error ? err.message : 'Failed to delete project.');
+    }
   };
 
+  const openNewProject  = () => { setEditingProject(undefined); setShowProjectModal(true); };
+  const openEditProject = () => { setEditingProject(selectedProject); setShowProjectModal(true); };
   const navigate = useCallback((v: View) => { setEditingTask(undefined); setView(v); }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      setAppError(err instanceof Error ? err.message : 'Failed to sign out.');
+    }
   };
 
   const handleSettingsChange = async (s: AppSettings) => {
+    const prev = settings;
     setSettings(s);
-    await saveSettings(s).catch(console.error);
+    try {
+      await saveSettings(s);
+    } catch (err) {
+      setSettings(prev);
+      setAppError(err instanceof Error ? err.message : 'Failed to save settings.');
+    }
   };
 
-  const activeView: View =
-    view === 'edit-task' || view === 'add-task' ? view :
-    view === 'task-detail' ? (selectedProjectId ? 'project-detail' : 'dashboard') :
+  // Sidebar active-state: map child views back to their parent nav item
+  const sidebarView: View =
+    view === 'add-task' || view === 'edit-task' ? 'tasks' :
+    view === 'task-detail' || view === 'project-detail' ? 'projects' :
     view;
 
   const spinner = (
@@ -204,7 +238,7 @@ export default function App() {
   return (
     <div className="bg-background text-on-surface min-h-screen flex font-sans">
       <Sidebar
-        currentView={activeView}
+        currentView={sidebarView}
         onNavigate={navigate}
         projects={projects}
         selectedProjectId={selectedProjectId}
@@ -217,16 +251,29 @@ export default function App() {
           search={search}
           onSearch={setSearch}
           onAddTask={() => { setEditingTask(undefined); setView('add-task'); }}
-          showAddButton={view === 'dashboard'}
+          showAddButton={view === 'dashboard' || view === 'tasks'}
           displayName={settings.displayName}
           userEmail={session.user.email}
           onSettings={() => navigate('settings')}
           onSignOut={handleSignOut}
         />
 
+        {/* Global error banner */}
+        {appError && (
+          <div className="flex items-center justify-between gap-md px-xl py-sm bg-error-container text-on-error-container text-label-sm">
+            <div className="flex items-center gap-sm">
+              <span className="material-symbols-outlined text-[16px]">error</span>
+              {appError}
+            </div>
+            <button onClick={() => setAppError('')} aria-label="Dismiss error" className="hover:opacity-70 transition-opacity">
+              <span className="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          </div>
+        )}
+
         <div className="flex-1">
           {view === 'dashboard' && (
-            <Dashboard tasks={tasks} projects={projects} history={history} search={search} onViewTask={handleViewTask}
+            <Dashboard tasks={tasks} history={history} onViewTask={handleViewTask}
               onAddTask={() => { setEditingTask(undefined); setView('add-task'); }}
               displayName={settings.displayName} />
           )}

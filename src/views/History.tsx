@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { HistoryEntry, HistoryAction } from '../types';
 import { HISTORY_META } from '../types';
 
@@ -34,15 +34,21 @@ function groupLabel(date: Date): string {
 export default function History({ history, onViewTask }: Props) {
   const [filter, setFilter] = useState<Filter>('all');
 
-  const filtered = history.filter(e => filter === 'all' || e.action === filter);
+  const filtered = useMemo(
+    () => history.filter(e => filter === 'all' || e.action === filter),
+    [history, filter]
+  );
 
-  const groups: { label: string; entries: HistoryEntry[] }[] = [];
-  for (const entry of filtered) {
-    const label = groupLabel(entry.timestamp);
-    const last = groups[groups.length - 1];
-    if (last && last.label === label) last.entries.push(entry);
-    else groups.push({ label, entries: [entry] });
-  }
+  const groups = useMemo(() => {
+    const result: { label: string; entries: HistoryEntry[] }[] = [];
+    for (const entry of filtered) {
+      const label = groupLabel(entry.timestamp);
+      const last = result[result.length - 1];
+      if (last && last.label === label) last.entries.push(entry);
+      else result.push({ label, entries: [entry] });
+    }
+    return result;
+  }, [filtered]);
 
   return (
     <div className="p-xl max-w-4xl mx-auto w-full">

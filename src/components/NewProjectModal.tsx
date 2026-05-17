@@ -51,6 +51,7 @@ export default function NewProjectModal({ project, onSave, onClose }: Props) {
         <div className="flex items-center justify-between px-lg pt-lg pb-md">
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="w-9 h-9 flex items-center justify-center bg-surface-container border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container-high transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">arrow_back</span>

@@ -46,11 +46,11 @@ export default function TopBar({
         />
       </div>
       <div className="flex items-center gap-lg">
-        <button className="relative text-on-surface-variant hover:bg-surface-container-high p-sm rounded-full transition-all duration-150">
+        <button aria-label="Notifications" title="Notifications" className="relative text-on-surface-variant/40 cursor-not-allowed p-sm rounded-full">
           <span className="material-symbols-outlined">notifications</span>
           <span className="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full" />
         </button>
-        <button className="text-on-surface-variant hover:bg-surface-container-high p-sm rounded-full transition-all duration-150">
+        <button aria-label="Help" title="Help" className="text-on-surface-variant/40 cursor-not-allowed p-sm rounded-full">
           <span className="material-symbols-outlined">help_outline</span>
         </button>
 

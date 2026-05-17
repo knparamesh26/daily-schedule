@@ -59,7 +59,7 @@ export default function Sidebar({ currentView, onNavigate, projects, selectedPro
             <button
               onClick={onNewProject}
               className="text-white/40 hover:text-white/80 transition-colors p-xs rounded"
-              title="New project"
+              aria-label="Create new project"
             >
               <span className="material-symbols-outlined text-[16px]">add</span>
             </button>

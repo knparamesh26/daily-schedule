@@ -25,6 +25,7 @@ export default {
         'on-error':                 'rgb(var(--c-on-error) / <alpha-value>)',
         'error-container':          'rgb(var(--c-err-container) / <alpha-value>)',
         'on-error-container':       'rgb(var(--c-on-err-container) / <alpha-value>)',
+        success:                    'rgb(var(--c-success) / <alpha-value>)',
         // ── Static design-system tokens ────────────────────
         'surface-bright':            '#f9f9ff',
         'surface-dim':               '#d3daea',

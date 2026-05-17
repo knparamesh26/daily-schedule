@@ -294,9 +294,10 @@ export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 
               {/* "+n more" labels per day */}
               {hiddenByCol.map((hidden, ci) =>
                 hidden > 0 ? (
-                  <span
+                  <button
                     key={ci}
-                    className="absolute text-[10px] text-on-surface-variant font-semibold hover:text-primary cursor-pointer px-sm"
+                    aria-label={`Show ${hidden} more tasks`}
+                    className="absolute text-[10px] text-on-surface-variant font-semibold hover:text-primary px-sm text-left"
                     style={{
                       left: `calc(${(ci / 7) * 100}%)`,
                       width: `calc(100% / 7)`,
@@ -305,7 +306,7 @@ export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 
                     }}
                   >
                     +{hidden} more
-                  </span>
+                  </button>
                 ) : null
               )}
             </div>

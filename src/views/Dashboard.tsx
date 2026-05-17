@@ -1,11 +1,9 @@
 import { useMemo } from 'react';
-import type { Task, Project, HistoryEntry } from '../types';
+import type { Task, HistoryEntry } from '../types';
 
 interface Props {
   tasks: Task[];
-  projects: Project[];
   history: HistoryEntry[];
-  search: string;
   onViewTask: (id: string) => void;
   onAddTask: () => void;
   displayName?: string;
@@ -46,7 +44,7 @@ function isDueSoon(dueDate: string) {
   return diff > 0 && diff <= 24 * 60 * 60 * 1000;
 }
 
-export default function Dashboard({ tasks, projects: _projects, history, search: _search, onViewTask, onAddTask, displayName = 'Alex' }: Props) {
+export default function Dashboard({ tasks, history, onViewTask, onAddTask, displayName = 'Alex' }: Props) {
   const today = new Date();
   const hour = today.getHours();
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
@@ -160,7 +158,7 @@ export default function Dashboard({ tasks, projects: _projects, history, search:
           <div className="flex items-end justify-between gap-sm" style={{ height: '140px' }}>
             {weekData.map((d, i) => {
               const isToday = i === todayIndex;
-              const barH = Math.max((d.total / maxBar) * 100, history.length === 0 ? 30 + Math.random() * 40 : 4);
+              const barH = Math.max((d.total / maxBar) * 100, history.length === 0 ? 24 : 4);
               const completedH = d.total === 0 ? 0 : (d.completed / d.total) * barH;
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-sm">
@@ -169,14 +167,14 @@ export default function Dashboard({ tasks, projects: _projects, history, search:
                       className="w-full rounded-md overflow-hidden flex flex-col justify-end"
                       style={{
                         height: `${barH}px`,
-                        backgroundColor: isToday ? 'rgba(77,68,227,0.18)' : 'rgba(77,68,227,0.08)',
+                        backgroundColor: isToday ? 'rgb(var(--c-primary) / 0.18)' : 'rgb(var(--c-primary) / 0.08)',
                       }}
                     >
                       {completedH > 0 && (
                         <div className="w-full"
                           style={{
                             height: `${completedH}px`,
-                            backgroundColor: isToday ? '#4d44e3' : 'rgba(77,68,227,0.5)',
+                            backgroundColor: isToday ? 'rgb(var(--c-primary))' : 'rgb(var(--c-primary) / 0.5)',
                           }}
                         />
                       )}

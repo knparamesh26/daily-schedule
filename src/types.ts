@@ -69,16 +69,16 @@ export const STATUS_ORDER: Status[] = ['todo', 'in_progress', 'done'];
 export const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'medium', 'low'];
 
 export const PRIORITY_STYLES: Record<Priority, { bg: string; text: string }> = {
-  critical: { bg: 'bg-error/10', text: 'text-error' },
-  high:     { bg: 'bg-error/10', text: 'text-error' },
-  medium:   { bg: 'bg-secondary/10', text: 'text-secondary' },
+  critical: { bg: 'bg-error/15',          text: 'text-error' },
+  high:     { bg: 'bg-orange-500/10',      text: 'text-orange-600' },
+  medium:   { bg: 'bg-secondary/10',       text: 'text-secondary' },
   low:      { bg: 'bg-outline-variant/30', text: 'text-on-surface-variant' },
 };
 
 export const STATUS_DOT: Record<Status, string> = {
-  todo: 'bg-outline',
+  todo:        'bg-outline',
   in_progress: 'bg-secondary',
-  done: 'bg-green-500',
+  done:        'bg-success',
 };
 
 export const HISTORY_META: Record<HistoryAction, { icon: string; label: string; color: string }> = {

@@ -85,7 +85,7 @@ export default function Projects({ projects, tasks, onOpenProject, onNewProject,
               <div className="w-40 shrink-0">
                 <p className="text-label-md text-on-surface font-bold leading-tight">{project.name}</p>
                 {project.description && (
-                  <p className="text-label-sm uppercase tracking-wider mt-[2px] truncate" style={{ color: 'rgba(0,0,0,0.38)' }}>
+                  <p className="text-label-sm uppercase tracking-wider mt-[2px] truncate text-on-surface-variant/60">
                     {project.description}
                   </p>
                 )}

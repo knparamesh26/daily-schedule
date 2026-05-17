@@ -79,11 +79,10 @@ export default function Tasks({ tasks, projects, onViewTask, onAssignProject }: 
     const rows = ['Name,Status,Priority,Project,Due Date',
       ...filtered.map(t => `"${t.name}","${t.status}","${t.priority}","${t.project}","${t.dueDate ?? ''}"`)
     ].join('\n');
-    const a = Object.assign(document.createElement('a'), {
-      href: URL.createObjectURL(new Blob([rows], { type: 'text/csv' })),
-      download: 'tasks.csv',
-    });
+    const blobUrl = URL.createObjectURL(new Blob([rows], { type: 'text/csv' }));
+    const a = Object.assign(document.createElement('a'), { href: blobUrl, download: 'tasks.csv' });
     a.click();
+    URL.revokeObjectURL(blobUrl);
   };
 
   const activeFilters = (filterPriority !== 'all' ? 1 : 0) + (filterProject !== 'all' ? 1 : 0);
