@@ -1,9 +1,5 @@
 export type Status = 'todo' | 'in_progress' | 'done';
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
-export type View =
-  | 'dashboard' | 'calendar' | 'tasks' | 'projects' | 'project-detail'
-  | 'add-task' | 'edit-task' | 'task-detail'
-  | 'history' | 'settings';
 export type HistoryAction = 'created' | 'updated' | 'completed' | 'deleted';
 
 export interface Task {
@@ -37,6 +33,8 @@ export interface AppSettings {
   defaultPriority: Priority;
   weekStartsOn: 0 | 1;
   darkMode: boolean;
+  dueTodayReminders: boolean;
+  weeklyDigest: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -44,6 +42,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultPriority: 'medium',
   weekStartsOn: 0,
   darkMode: false,
+  dueTodayReminders: true,
+  weeklyDigest: false,
 };
 
 export const PROJECT_COLORS = [
@@ -69,21 +69,21 @@ export const STATUS_ORDER: Status[] = ['todo', 'in_progress', 'done'];
 export const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'medium', 'low'];
 
 export const PRIORITY_STYLES: Record<Priority, { bg: string; text: string }> = {
-  critical: { bg: 'bg-error/10', text: 'text-error' },
-  high:     { bg: 'bg-error/10', text: 'text-error' },
-  medium:   { bg: 'bg-secondary/10', text: 'text-secondary' },
+  critical: { bg: 'bg-error/15',          text: 'text-error' },
+  high:     { bg: 'bg-orange-500/10',      text: 'text-orange-600' },
+  medium:   { bg: 'bg-secondary/10',       text: 'text-secondary' },
   low:      { bg: 'bg-outline-variant/30', text: 'text-on-surface-variant' },
 };
 
 export const STATUS_DOT: Record<Status, string> = {
-  todo: 'bg-outline',
+  todo:        'bg-outline',
   in_progress: 'bg-secondary',
-  done: 'bg-green-500',
+  done:        'bg-success',
 };
 
 export const HISTORY_META: Record<HistoryAction, { icon: string; label: string; color: string }> = {
-  created:   { icon: 'add_circle',   label: 'Created',   color: 'text-secondary' },
+  created:   { icon: 'add_circle',   label: 'Created',   color: 'text-primary' },
   updated:   { icon: 'edit',         label: 'Updated',   color: 'text-on-surface-variant' },
-  completed: { icon: 'check_circle', label: 'Completed', color: 'text-green-600' },
+  completed: { icon: 'check_circle', label: 'Completed', color: 'text-success' },
   deleted:   { icon: 'delete',       label: 'Deleted',   color: 'text-error' },
 };

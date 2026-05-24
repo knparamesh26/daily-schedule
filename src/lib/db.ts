@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import type { Task, Project, HistoryEntry, AppSettings } from '../types';
+import { DEFAULT_SETTINGS } from '../types';
 
 async function uid(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -13,6 +14,7 @@ export async function fetchProjects(): Promise<Project[]> {
   const { data, error } = await supabase
     .from('projects')
     .select('*')
+    .eq('user_id', await uid())
     .order('created_at');
   if (error) throw error;
   return data.map(r => ({ id: r.id, name: r.name, color: r.color, description: r.description }));
@@ -60,6 +62,7 @@ export async function fetchTasks(): Promise<Task[]> {
   const { data, error } = await supabase
     .from('tasks')
     .select('*, projects(name)')
+    .eq('user_id', await uid())
     .order('created_at');
   if (error) throw error;
   return data.map(rowToTask);
@@ -128,6 +131,7 @@ export async function fetchHistory(): Promise<HistoryEntry[]> {
   const { data, error } = await supabase
     .from('history')
     .select('*')
+    .eq('user_id', await uid())
     .order('timestamp', { ascending: false })
     .limit(200);
   if (error) throw error;
@@ -170,12 +174,14 @@ export async function fetchSettings(): Promise<AppSettings> {
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw error;
-  if (!data) return { displayName: 'Alex', defaultPriority: 'medium', weekStartsOn: 0, darkMode: false };
+  if (!data) return DEFAULT_SETTINGS;
   return {
     displayName: data.display_name,
     defaultPriority: data.default_priority,
     weekStartsOn: data.week_starts_on,
     darkMode: data.dark_mode,
+    dueTodayReminders: data.due_today_reminders ?? true,
+    weeklyDigest: data.weekly_digest ?? false,
   };
 }
 

@@ -1,34 +1,40 @@
-import type { Project, Task } from '../types';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAppData } from '../context/AppContext';
+import { useLayout } from '../context/LayoutContext';
 import { STATUS_ORDER, STATUS_LABELS, STATUS_DOT, PRIORITY_LABELS, PRIORITY_STYLES } from '../types';
 
-interface Props {
-  project: Project;
-  tasks: Task[];
-  onBack: () => void;
-  onViewTask: (id: string) => void;
-  onAddTask: () => void;
-  onEditProject: () => void;
-  onDeleteProject: () => void;
-}
+export default function ProjectDetail() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  const { tasks, projects, handleDeleteProject } = useAppData();
+  const { openProjectModal } = useLayout();
 
-export default function ProjectDetail({
-  project, tasks, onBack, onViewTask, onAddTask, onEditProject, onDeleteProject,
-}: Props) {
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return (
+    <div className="p-xl text-center text-on-surface-variant">
+      <p>Project not found.</p>
+      <button onClick={() => navigate('/projects')} className="mt-md text-primary hover:underline text-label-md">Back to Projects</button>
+    </div>
+  );
+
   const projectTasks = tasks.filter(t => t.project === project.name);
   const done = projectTasks.filter(t => t.status === 'done').length;
   const total = projectTasks.length;
   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
 
+  const onDelete = async () => {
+    await handleDeleteProject(project.id);
+    navigate('/projects');
+  };
+
   return (
     <div className="p-xl max-w-7xl mx-auto w-full">
-      {/* Breadcrumb */}
       <div className="flex items-center gap-xs text-label-md text-on-surface-variant mb-lg">
-        <button onClick={onBack} className="hover:text-primary transition-colors">Projects</button>
-        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+        <button onClick={() => navigate('/projects')} className="hover:text-primary transition-colors">Projects</button>
+        <span className="material-symbols-outlined text-icon-base">chevron_right</span>
         <span className="text-on-surface">{project.name}</span>
       </div>
 
-      {/* Project header */}
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-xl shadow-sm mb-xl">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-lg">
@@ -36,7 +42,7 @@ export default function ProjectDetail({
               className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
               style={{ backgroundColor: `${project.color}20` }}
             >
-              <span className="material-symbols-outlined text-[28px]" style={{ color: project.color }}>
+              <span className="material-symbols-outlined text-icon-3xl" style={{ color: project.color }}>
                 folder
               </span>
             </div>
@@ -52,23 +58,22 @@ export default function ProjectDetail({
           </div>
           <div className="flex gap-md shrink-0">
             <button
-              onClick={onEditProject}
+              onClick={() => openProjectModal(project)}
               className="flex items-center gap-sm px-md py-sm border border-outline-variant rounded text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors"
             >
-              <span className="material-symbols-outlined text-[16px]">edit</span>
+              <span className="material-symbols-outlined text-icon-base">edit</span>
               Edit
             </button>
             <button
-              onClick={onAddTask}
+              onClick={() => navigate(`/tasks/new?fromProject=${project.id}`)}
               className="flex items-center gap-sm bg-primary text-on-primary px-lg py-sm rounded hover:opacity-90 active:scale-95 transition-all text-label-md shadow-sm"
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span className="material-symbols-outlined text-icon-md">add</span>
               Add Task
             </button>
           </div>
         </div>
 
-        {/* Stats bar */}
         <div className="mt-lg pt-lg border-t border-outline-variant grid grid-cols-3 gap-lg">
           {[
             { label: 'Total Tasks',   value: total },
@@ -82,7 +87,6 @@ export default function ProjectDetail({
           ))}
         </div>
 
-        {/* Progress bar */}
         <div className="mt-md w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500"
@@ -91,7 +95,6 @@ export default function ProjectDetail({
         </div>
       </div>
 
-      {/* Kanban columns */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
         {STATUS_ORDER.map(status => {
           const col = projectTasks.filter(t => t.status === status);
@@ -116,7 +119,7 @@ export default function ProjectDetail({
                   col.map(task => (
                     <button
                       key={task.id}
-                      onClick={() => onViewTask(task.id)}
+                      onClick={() => navigate(`/tasks/${task.id}`)}
                       className={`w-full text-left bg-surface-container-lowest border rounded-lg p-md shadow-sm hover:shadow-md transition-all duration-150
                         ${task.status === 'in_progress' ? 'border-secondary/30 ring-1 ring-secondary/10' : 'border-outline-variant'}`}
                     >
@@ -125,10 +128,10 @@ export default function ProjectDetail({
                           {PRIORITY_LABELS[task.priority]}
                         </span>
                         {task.status === 'done'
-                          ? <span className="material-symbols-outlined text-green-600 text-[20px]">check_circle</span>
+                          ? <span className="material-symbols-outlined text-green-600 text-icon-lg">check_circle</span>
                           : task.status === 'in_progress'
-                            ? <span className="material-symbols-outlined text-secondary text-[20px]">play_circle</span>
-                            : <span className="material-symbols-outlined text-on-surface-variant text-[20px]">flag</span>
+                            ? <span className="material-symbols-outlined text-secondary text-icon-lg">play_circle</span>
+                            : <span className="material-symbols-outlined text-on-surface-variant text-icon-lg">flag</span>
                         }
                       </div>
                       <p className={`text-label-md text-primary ${task.status === 'done' ? 'line-through' : ''}`}>
@@ -139,7 +142,7 @@ export default function ProjectDetail({
                       )}
                       {task.dueDate && (
                         <div className="mt-md pt-md border-t border-outline-variant/30 flex items-center gap-xs text-on-surface-variant">
-                          <span className="material-symbols-outlined text-[14px]">schedule</span>
+                          <span className="material-symbols-outlined text-headline-sm">schedule</span>
                           <span className="text-label-sm">{task.dueDate}</span>
                         </div>
                       )}
@@ -152,10 +155,9 @@ export default function ProjectDetail({
         })}
       </div>
 
-      {/* Danger zone */}
       <div className="mt-xl pt-xl border-t border-outline-variant">
         <button
-          onClick={onDeleteProject}
+          onClick={onDelete}
           className="text-label-md text-error hover:bg-error/5 px-md py-sm rounded transition-colors"
         >
           Delete project

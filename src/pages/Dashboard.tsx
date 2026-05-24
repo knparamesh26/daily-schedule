@@ -1,15 +1,7 @@
 import { useMemo } from 'react';
-import type { Task, Project, HistoryEntry } from '../types';
-
-interface Props {
-  tasks: Task[];
-  projects: Project[];
-  history: HistoryEntry[];
-  search: string;
-  onViewTask: (id: string) => void;
-  onAddTask: () => void;
-  displayName?: string;
-}
+import { useNavigate } from 'react-router-dom';
+import { useAppData } from '../context/AppContext';
+import type { Task } from '../types';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -46,7 +38,10 @@ function isDueSoon(dueDate: string) {
   return diff > 0 && diff <= 24 * 60 * 60 * 1000;
 }
 
-export default function Dashboard({ tasks, projects: _projects, history, search: _search, onViewTask, onAddTask, displayName = 'Alex' }: Props) {
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const { tasks, history, settings } = useAppData();
+
   const today = new Date();
   const hour = today.getHours();
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
@@ -90,34 +85,27 @@ export default function Dashboard({ tasks, projects: _projects, history, search:
 
   return (
     <div className="p-xl max-w-7xl mx-auto w-full">
-      {/* Header */}
       <div className="flex items-start justify-between mb-xl">
         <div>
-          <h2 className="text-headline-xl text-on-surface font-bold">{greeting}, {displayName}</h2>
+          <h2 className="text-page-title text-on-surface">{greeting}, {settings.displayName}</h2>
           <p className="text-body-md text-on-surface-variant mt-xs">Here's what's happening in TaskStream today.</p>
         </div>
-        <div className="flex items-center gap-sm px-md py-xs border border-outline-variant rounded-lg bg-surface-container-lowest shadow-sm">
-          <span className="material-symbols-outlined text-primary text-[18px]">calendar_today</span>
-          <span className="text-label-md text-on-surface">{formattedDate}</span>
+        <div className="flex items-center gap-sm px-md py-xs border border-outline-variant rounded-lg bg-surface shadow-sm">
+          <span className="material-symbols-outlined text-primary text-icon-md">calendar_today</span>
+          <span className="text-label-md font-bold text-on-surface">{formattedDate}</span>
         </div>
       </div>
 
-      {/* Row 1 */}
       <div className="grid grid-cols-12 gap-lg mb-lg">
-        {/* Productivity Boost */}
         <div className="col-span-12 md:col-span-4 bg-primary rounded-xl p-lg flex flex-col">
           <div>
             <h3 className="text-headline-md font-bold text-white">Productivity Boost</h3>
             <p className="text-body-sm text-white/70 mt-xs">
-              {total === 0
-                ? 'Add your first task to get started.'
-                : score >= 80
-                  ? `You've completed ${score}% of your tasks. Almost there!`
-                  : `${doneCount} of ${total} tasks done. Keep it up!`}
+              {total === 0 ? 'Add your first task to get started.'
+                : score >= 80 ? `You've completed ${score}% of your tasks. Almost there!`
+                : `${doneCount} of ${total} tasks done. Keep it up!`}
             </p>
           </div>
-
-          {/* Ring */}
           <div className="flex-1 flex items-center justify-center my-lg">
             <div className="relative" style={{ width: (radius + strokeWidth) * 2, height: (radius + strokeWidth) * 2 }}>
               <svg width="100%" height="100%"
@@ -138,17 +126,15 @@ export default function Dashboard({ tasks, projects: _projects, history, search:
               </div>
             </div>
           </div>
-
           <button
-            onClick={onAddTask}
-            className="w-full bg-white text-primary py-sm rounded-lg text-label-md font-semibold hover:bg-white/90 active:scale-95 transition-all duration-150"
+            onClick={() => navigate('/tasks/new')}
+            className="w-full bg-white text-primary py-sm rounded-lg text-label-md font-bold hover:bg-white/90 active:scale-95 transition-all duration-150"
           >
             Add New Task
           </button>
         </div>
 
-        {/* Key Reports */}
-        <div className="col-span-12 md:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+        <div className="col-span-12 md:col-span-8 bg-surface border border-outline-variant rounded-xl p-lg">
           <div className="flex items-start justify-between mb-lg">
             <div>
               <h3 className="text-headline-md text-on-surface font-bold">Key Reports</h3>
@@ -156,29 +142,20 @@ export default function Dashboard({ tasks, projects: _projects, history, search:
             </div>
             <span className="px-sm py-xs border border-outline-variant rounded text-label-sm text-on-surface-variant">This Week</span>
           </div>
-
-          <div className="flex items-end justify-between gap-sm" style={{ height: '140px' }}>
+          <div className="flex items-end justify-between gap-sm h-chart">
             {weekData.map((d, i) => {
               const isToday = i === todayIndex;
-              const barH = Math.max((d.total / maxBar) * 100, history.length === 0 ? 30 + Math.random() * 40 : 4);
+              const barH = Math.max((d.total / maxBar) * 100, history.length === 0 ? 24 : 4);
               const completedH = d.total === 0 ? 0 : (d.completed / d.total) * barH;
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-sm">
-                  <div className="w-full flex flex-col justify-end" style={{ height: '110px' }}>
+                  <div className="w-full flex flex-col justify-end h-chart-bar">
                     <div
-                      className="w-full rounded-md overflow-hidden flex flex-col justify-end"
-                      style={{
-                        height: `${barH}px`,
-                        backgroundColor: isToday ? 'rgba(77,68,227,0.18)' : 'rgba(77,68,227,0.08)',
-                      }}
+                      className={`w-full rounded-md overflow-hidden flex flex-col justify-end ${isToday ? 'bg-primary/18' : 'bg-primary/8'}`}
+                      style={{ height: `${barH}px` }}
                     >
                       {completedH > 0 && (
-                        <div className="w-full"
-                          style={{
-                            height: `${completedH}px`,
-                            backgroundColor: isToday ? '#4d44e3' : 'rgba(77,68,227,0.5)',
-                          }}
-                        />
+                        <div className={`w-full ${isToday ? 'bg-primary' : 'bg-primary/50'}`} style={{ height: `${completedH}px` }} />
                       )}
                     </div>
                   </div>
@@ -192,10 +169,8 @@ export default function Dashboard({ tasks, projects: _projects, history, search:
         </div>
       </div>
 
-      {/* Row 2 */}
       <div className="grid grid-cols-12 gap-lg">
-        {/* Attention Required */}
-        <div className="col-span-12 md:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+        <div className="col-span-12 md:col-span-7 bg-surface border border-outline-variant rounded-xl p-lg">
           <div className="flex items-center justify-between mb-lg">
             <h3 className="text-headline-md text-on-surface font-bold">Attention Required</h3>
             {urgentTasks.length > 0 && (
@@ -204,10 +179,9 @@ export default function Dashboard({ tasks, projects: _projects, history, search:
               </span>
             )}
           </div>
-
           {urgentTasks.length === 0 ? (
             <div className="text-center py-xl">
-              <span className="material-symbols-outlined text-[40px] text-on-surface-variant/30">check_circle</span>
+              <span className="material-symbols-outlined text-icon-5xl text-on-surface-variant/30">check_circle</span>
               <p className="text-body-md text-on-surface-variant/50 mt-md">No urgent tasks. All clear!</p>
             </div>
           ) : (
@@ -218,23 +192,23 @@ export default function Dashboard({ tasks, projects: _projects, history, search:
                 return (
                   <button
                     key={task.id}
-                    onClick={() => onViewTask(task.id)}
+                    onClick={() => navigate(`/tasks/${task.id}`)}
                     className="w-full flex items-center gap-md p-md rounded-lg border border-outline-variant/50 hover:bg-surface-container-low transition-colors text-left relative overflow-hidden"
                   >
-                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-error" />
+                    <div className="absolute left-0 top-0 bottom-0 w-accent bg-error" />
                     <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-error text-[16px]">
+                      <span className="material-symbols-outlined text-error text-icon-base">
                         {overdue ? 'warning' : 'priority_high'}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-label-md text-on-surface font-semibold truncate">{task.name}</p>
-                      <div className="flex items-center gap-sm mt-[2px]">
+                      <div className="flex items-center gap-sm mt-0.5">
                         {task.project && <span className="text-label-sm text-on-surface-variant">{task.project}</span>}
                         {task.project && task.dueDate && <span className="text-on-surface-variant/40 text-label-sm">•</span>}
                         {task.dueDate && (
                           <span className={`text-label-sm flex items-center gap-xs ${overdue || dueToday ? 'text-error' : 'text-on-surface-variant'}`}>
-                            <span className="material-symbols-outlined text-[12px]">schedule</span>
+                            <span className="material-symbols-outlined text-icon-xs">schedule</span>
                             {overdue ? 'Overdue' : dueToday ? 'Due today' : `Due ${task.dueDate}`}
                           </span>
                         )}
@@ -247,13 +221,11 @@ export default function Dashboard({ tasks, projects: _projects, history, search:
           )}
         </div>
 
-        {/* Recent Activity */}
-        <div className="col-span-12 md:col-span-5 bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+        <div className="col-span-12 md:col-span-5 bg-surface border border-outline-variant rounded-xl p-lg">
           <h3 className="text-headline-md text-on-surface font-bold mb-lg">Recent Activity</h3>
-
           {recentActivity.length === 0 ? (
             <div className="text-center py-xl">
-              <span className="material-symbols-outlined text-[40px] text-on-surface-variant/30">history</span>
+              <span className="material-symbols-outlined text-icon-5xl text-on-surface-variant/30">history</span>
               <p className="text-body-md text-on-surface-variant/50 mt-md">No recent activity yet.</p>
             </div>
           ) : (
@@ -270,11 +242,10 @@ export default function Dashboard({ tasks, projects: _projects, history, search:
                 const diff = Date.now() - ts.getTime();
                 const mins = Math.floor(diff / 60000);
                 const timeAgo = mins < 1 ? 'just now' : mins < 60 ? `${mins}m ago` : mins < 1440 ? `${Math.floor(mins / 60)}h ago` : `${Math.floor(mins / 1440)}d ago`;
-
                 return (
                   <div key={entry.id} className="flex items-center gap-md">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${colorMap[entry.action]}`}>
-                      <span className="material-symbols-outlined text-[16px]">{iconMap[entry.action]}</span>
+                      <span className="material-symbols-outlined text-icon-base">{iconMap[entry.action]}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-label-md text-on-surface font-medium truncate">{entry.taskName}</p>

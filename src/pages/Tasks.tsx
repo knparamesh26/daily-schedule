@@ -1,15 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import type { Task, Project } from '../types';
+import { useNavigate } from 'react-router-dom';
+import { useAppData } from '../context/AppContext';
+import type { Task } from '../types';
 import { STATUS_LABELS, PRIORITY_LABELS, PRIORITY_STYLES } from '../types';
 
 type GroupBy = 'status' | 'priority' | 'project';
-
-interface Props {
-  tasks: Task[];
-  projects: Project[];
-  onViewTask: (id: string) => void;
-  onAssignProject: (taskId: string, projectName: string) => void;
-}
 
 const STATUS_COLS  = ['todo', 'in_progress', 'done'] as const;
 const PRIORITY_COLS = ['critical', 'high', 'medium', 'low'] as const;
@@ -27,12 +22,15 @@ const PRIORITY_DOT: Record<string, string> = {
   low:      'bg-green-400',
 };
 
-export default function Tasks({ tasks, projects, onViewTask, onAssignProject }: Props) {
-  const [groupBy, setGroupBy]         = useState<GroupBy>('status');
+export default function Tasks() {
+  const navigate = useNavigate();
+  const { tasks, projects, handleAssignProject } = useAppData();
+
+  const [groupBy, setGroupBy]           = useState<GroupBy>('status');
   const [showGroupMenu, setShowGroupMenu] = useState(false);
   const [filterPriority, setFilterPriority] = useState('all');
   const [filterProject,  setFilterProject]  = useState('all');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters]   = useState(false);
   const groupMenuRef  = useRef<HTMLDivElement>(null);
   const filterMenuRef = useRef<HTMLDivElement>(null);
 
@@ -66,7 +64,6 @@ export default function Tasks({ tasks, projects, onViewTask, onAssignProject }: 
         dot: PRIORITY_DOT[p], color: '',
       }));
     }
-    // by project
     const rows = projects
       .filter(p => filtered.some(t => t.project === p.name))
       .map(p => ({ key: p.id, label: p.name, tasks: filtered.filter(t => t.project === p.name), dot: '', color: p.color }));
@@ -79,26 +76,24 @@ export default function Tasks({ tasks, projects, onViewTask, onAssignProject }: 
     const rows = ['Name,Status,Priority,Project,Due Date',
       ...filtered.map(t => `"${t.name}","${t.status}","${t.priority}","${t.project}","${t.dueDate ?? ''}"`)
     ].join('\n');
-    const a = Object.assign(document.createElement('a'), {
-      href: URL.createObjectURL(new Blob([rows], { type: 'text/csv' })),
-      download: 'tasks.csv',
-    });
+    const blobUrl = URL.createObjectURL(new Blob([rows], { type: 'text/csv' }));
+    const a = Object.assign(document.createElement('a'), { href: blobUrl, download: 'tasks.csv' });
     a.click();
+    URL.revokeObjectURL(blobUrl);
   };
 
   const activeFilters = (filterPriority !== 'all' ? 1 : 0) + (filterProject !== 'all' ? 1 : 0);
 
   return (
     <div className="p-xl max-w-full mx-auto w-full">
-      {/* Header */}
       <div className="flex items-start justify-between mb-xl">
         <div>
-          <h2 className="text-headline-xl text-on-surface font-bold">Workspace Tasks</h2>
-          <p className="text-body-md text-on-surface-variant mt-xs">Manage and track your operational flow.</p>
+          <h2 className="text-page-title text-on-surface">Workspace Tasks</h2>
+          <p className="text-body-md text-on-surface-variant mt-xs">
+            {filtered.length} tasks across {new Set(filtered.map(t => t.project).filter(Boolean)).size} projects.
+          </p>
         </div>
-
         <div className="flex items-center gap-sm">
-          {/* Group By */}
           <div className="relative" ref={groupMenuRef}>
             <button
               onClick={() => setShowGroupMenu(v => !v)}
@@ -106,7 +101,7 @@ export default function Tasks({ tasks, projects, onViewTask, onAssignProject }: 
             >
               <span className="text-on-surface-variant text-label-sm font-normal">Group By</span>
               <span className="font-semibold">{groupBy === 'status' ? 'Status' : groupBy === 'priority' ? 'Priority' : 'Project'}</span>
-              <span className="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span>
+              <span className="material-symbols-outlined text-icon-base text-on-surface-variant">expand_more</span>
             </button>
             {showGroupMenu && (
               <div className="absolute right-0 top-full mt-xs w-40 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-lg z-20 overflow-hidden">
@@ -124,16 +119,15 @@ export default function Tasks({ tasks, projects, onViewTask, onAssignProject }: 
             )}
           </div>
 
-          {/* Filters */}
           <div className="relative" ref={filterMenuRef}>
             <button
               onClick={() => setShowFilters(v => !v)}
               className="flex items-center gap-sm px-md py-xs border border-outline-variant rounded-lg bg-surface-container-lowest text-label-md text-on-surface hover:bg-surface-container-low transition-colors shadow-sm"
             >
-              <span className="material-symbols-outlined text-[16px] text-on-surface-variant">filter_list</span>
+              <span className="material-symbols-outlined text-icon-base text-on-surface-variant">filter_list</span>
               Filters
               {activeFilters > 0 && (
-                <span className="w-4 h-4 rounded-full bg-primary text-on-primary text-[10px] flex items-center justify-center font-bold">{activeFilters}</span>
+                <span className="w-4 h-4 rounded-full bg-primary text-on-primary text-label-xs flex items-center justify-center font-bold">{activeFilters}</span>
               )}
             </button>
             {showFilters && (
@@ -141,8 +135,7 @@ export default function Tasks({ tasks, projects, onViewTask, onAssignProject }: 
                 <div>
                   <p className="text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs">Priority</p>
                   <select
-                    value={filterPriority}
-                    onChange={e => setFilterPriority(e.target.value)}
+                    value={filterPriority} onChange={e => setFilterPriority(e.target.value)}
                     className="w-full bg-surface-container border border-outline-variant rounded px-sm py-xs text-label-md text-on-surface outline-none"
                   >
                     <option value="all">All priorities</option>
@@ -152,8 +145,7 @@ export default function Tasks({ tasks, projects, onViewTask, onAssignProject }: 
                 <div>
                   <p className="text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs">Project</p>
                   <select
-                    value={filterProject}
-                    onChange={e => setFilterProject(e.target.value)}
+                    value={filterProject} onChange={e => setFilterProject(e.target.value)}
                     className="w-full bg-surface-container border border-outline-variant rounded px-sm py-xs text-label-md text-on-surface outline-none"
                   >
                     <option value="all">All projects</option>
@@ -161,10 +153,7 @@ export default function Tasks({ tasks, projects, onViewTask, onAssignProject }: 
                   </select>
                 </div>
                 {activeFilters > 0 && (
-                  <button
-                    onClick={() => { setFilterPriority('all'); setFilterProject('all'); }}
-                    className="text-label-sm text-error hover:underline"
-                  >
+                  <button onClick={() => { setFilterPriority('all'); setFilterProject('all'); }} className="text-label-sm text-error hover:underline">
                     Clear filters
                   </button>
                 )}
@@ -172,54 +161,48 @@ export default function Tasks({ tasks, projects, onViewTask, onAssignProject }: 
             )}
           </div>
 
-          {/* Export */}
           <button
             onClick={handleExport}
             className="flex items-center gap-sm px-md py-xs border border-outline-variant rounded-lg bg-surface-container-lowest text-label-md text-on-surface hover:bg-surface-container-low transition-colors shadow-sm"
           >
-            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">download</span>
+            <span className="material-symbols-outlined text-icon-base text-on-surface-variant">download</span>
             Export
           </button>
         </div>
       </div>
 
-      {/* Columns */}
-      <div className="flex gap-lg overflow-x-auto pb-lg">
-        {groups.map(group => (
-          <div key={group.key} className="flex-shrink-0 w-[300px] flex flex-col">
-            <div className="flex items-center justify-between mb-md px-xs">
-              <div className="flex items-center gap-sm">
-                <div
-                  className={`w-2.5 h-2.5 rounded-full ${group.dot}`}
-                  style={group.color ? { backgroundColor: group.color } : undefined}
-                />
-                <span className="text-label-md text-on-surface font-semibold">{group.label}</span>
-                <span className="text-label-sm text-on-surface-variant bg-surface-container px-sm py-[2px] rounded-full">
-                  {group.tasks.length}
-                </span>
-              </div>
-              <button className="text-on-surface-variant hover:text-on-surface transition-colors">
-                <span className="material-symbols-outlined text-[18px]">more_horiz</span>
-              </button>
-            </div>
-
-            <div className="space-y-sm">
-              {group.tasks.map(task => (
-                <TaskCard
-                  key={task.id} task={task} groupBy={groupBy}
-                  projects={projects}
-                  onClick={() => onViewTask(task.id)}
-                  onAssignProject={onAssignProject}
-                />
-              ))}
-              {group.tasks.length === 0 && (
-                <div className="border-2 border-dashed border-outline-variant rounded-xl py-lg text-center text-label-sm text-on-surface-variant/40">
-                  No tasks
+      <div className="overflow-x-auto bg-background">
+        <div className="flex gap-lg pb-lg">
+          {groups.map(group => (
+            <div key={group.key} className="flex-shrink-0 w-kanban flex flex-col">
+              <div className="flex items-center justify-between mb-md px-xs">
+                <div className="flex items-center gap-sm">
+                  <div className={`w-2.5 h-2.5 rounded-full ${group.dot}`} style={group.color ? { backgroundColor: group.color } : undefined} />
+                  <span className="text-label-md text-on-surface font-semibold">{group.label}</span>
+                  <span className="text-label-sm text-on-surface-variant bg-surface-container px-sm py-0.5 rounded-full">{group.tasks.length}</span>
                 </div>
-              )}
+                <button className="text-on-surface-variant hover:text-on-surface transition-colors">
+                  <span className="material-symbols-outlined text-icon-md">more_horiz</span>
+                </button>
+              </div>
+              <div className="space-y-sm">
+                {group.tasks.map(task => (
+                  <TaskCard
+                    key={task.id} task={task} groupBy={groupBy}
+                    projects={projects}
+                    onClick={() => navigate(`/tasks/${task.id}`)}
+                    onAssignProject={handleAssignProject}
+                  />
+                ))}
+                {group.tasks.length === 0 && (
+                  <div className="border-2 border-dashed border-outline-variant rounded-xl py-lg text-center text-label-sm text-on-surface-variant/40">
+                    No tasks
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -228,7 +211,7 @@ export default function Tasks({ tasks, projects, onViewTask, onAssignProject }: 
 function TaskCard({ task, groupBy, projects, onClick, onAssignProject }: {
   task: Task;
   groupBy: GroupBy;
-  projects: Project[];
+  projects: { id: string; name: string; color: string; description: string }[];
   onClick: () => void;
   onAssignProject: (taskId: string, projectName: string) => void;
 }) {
@@ -255,51 +238,42 @@ function TaskCard({ task, groupBy, projects, onClick, onAssignProject }: {
   return (
     <div
       onClick={onClick}
-      className={`bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-md shadow-sm hover:shadow-md transition-all duration-150 cursor-pointer ${isDone ? 'opacity-75' : ''}`}
+      className={`bg-surface border border-outline-variant rounded-xl p-md shadow-sm hover:shadow-md transition-all duration-150 cursor-pointer ${isDone ? 'opacity-75' : ''} ${isInProgress ? 'border-primary/30' : ''}`}
     >
-      {/* Top row */}
       <div className="flex items-center justify-between mb-sm">
         <div className="flex items-center gap-xs flex-wrap">
-          {isDone && <span className="material-symbols-outlined text-green-500 text-[15px]">check_circle</span>}
+          {isDone && <span className="material-symbols-outlined text-green-500 text-icon-sm">check_circle</span>}
           {groupBy !== 'project' && task.project && (
-            <span className="text-label-sm text-on-surface bg-surface-container px-sm py-[2px] rounded-full">
-              {task.project}
-            </span>
+            <span className="text-label-sm text-on-surface bg-surface-container px-sm py-0.5 rounded-full">{task.project}</span>
           )}
           {groupBy !== 'priority' && (
-            <span className={`text-label-sm px-sm py-[2px] rounded-full ${pStyle.bg} ${pStyle.text}`}>
-              {PRIORITY_LABELS[task.priority]}
-            </span>
+            <span className={`text-label-sm px-sm py-0.5 rounded-full ${pStyle.bg} ${pStyle.text}`}>{PRIORITY_LABELS[task.priority]}</span>
           )}
         </div>
-        {isInProgress && <span className="material-symbols-outlined text-on-surface-variant/50 text-[15px]">edit</span>}
+        {isInProgress && <span className="material-symbols-outlined text-on-surface-variant/50 text-icon-sm">edit</span>}
       </div>
 
-      {/* Name */}
       <h4 className={`text-headline-sm text-on-surface font-bold mb-xs leading-snug ${isDone ? 'line-through opacity-50' : ''}`}>
         {task.name}
       </h4>
 
-      {/* Description */}
       {task.description && (
         <p className="text-body-sm text-on-surface-variant line-clamp-2 mb-sm">{task.description}</p>
       )}
 
-      {/* Progress bar */}
       {isInProgress && (
-        <div className="w-full bg-surface-container-high rounded-full overflow-hidden mb-sm" style={{ height: '5px' }}>
-          <div className="bg-primary h-full w-[60%] rounded-full" />
+        <div className="w-full bg-surface-container-high rounded-full overflow-hidden mb-sm h-1.25">
+          <div className="bg-primary h-full w-3/5 rounded-full" />
         </div>
       )}
 
-      {/* Assign to project — only for unassigned tasks */}
       {!task.project && projects.length > 0 && (
         <div className="relative mt-sm" ref={pickerRef}>
           <button
             onClick={e => { e.stopPropagation(); setShowPicker(v => !v); }}
-            className="flex items-center gap-xs text-label-sm text-on-surface-variant border border-dashed border-outline-variant rounded-full px-sm py-[3px] hover:border-primary hover:text-primary transition-colors"
+            className="flex items-center gap-xs text-label-sm text-on-surface-variant border border-dashed border-outline-variant rounded-full px-sm py-0.75 hover:border-primary hover:text-primary transition-colors"
           >
-            <span className="material-symbols-outlined text-[13px]">add</span>
+            <span className="material-symbols-outlined text-icon-2xs">add</span>
             Add to project
           </button>
           {showPicker && (
@@ -320,13 +294,12 @@ function TaskCard({ task, groupBy, projects, onClick, onAssignProject }: {
         </div>
       )}
 
-      {/* Footer */}
       {(isHighPriority || dueFmt) && (
         <div className="flex items-center justify-between pt-sm border-t border-outline-variant/30 mt-sm">
           <div>
             {isHighPriority && !isDone && groupBy === 'priority' && (
               <span className={`text-label-sm font-semibold flex items-center gap-xs ${task.priority === 'critical' ? 'text-error' : 'text-orange-500'}`}>
-                <span className="material-symbols-outlined text-[13px]">priority_high</span>
+                <span className="material-symbols-outlined text-icon-2xs">priority_high</span>
                 {PRIORITY_LABELS[task.priority]}
               </span>
             )}
@@ -335,7 +308,7 @@ function TaskCard({ task, groupBy, projects, onClick, onAssignProject }: {
             isDone
               ? <span className="text-label-sm text-on-surface-variant">Completed {dueFmt}</span>
               : <div className="flex items-center gap-xs text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[13px]">calendar_today</span>
+                  <span className="material-symbols-outlined text-icon-2xs">calendar_today</span>
                   <span className="text-label-sm">{dueFmt}</span>
                 </div>
           )}
