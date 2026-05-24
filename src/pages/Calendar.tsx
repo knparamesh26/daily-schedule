@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppData } from '../context/AppContext';
 import type { Task } from '../types';
 import { PRIORITY_STYLES } from '../types';
 
@@ -8,24 +10,24 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-const MAX_TRACKS = 2;   // visible event rows per day before "+n more"
-const DATE_ROW_H = 32;  // px reserved for the date number
-const EVENT_H = 20;     // px per event bar
-const EVENT_GAP = 4;    // px between event bars
-const MORE_ROW_H = 18;  // px for the "+n more" label row
+const MAX_TRACKS = 2;
+const DATE_ROW_H = 32;
+const EVENT_H = 20;
+const EVENT_GAP = 4;
+const MORE_ROW_H = 18;
 const CELL_H = DATE_ROW_H + MAX_TRACKS * (EVENT_H + EVENT_GAP) + MORE_ROW_H + 6;
 
 interface CellData {
   day: number;
   currentMonth: boolean;
-  date: string; // YYYY-MM-DD
+  date: string;
 }
 
 interface EventSlot {
   task: Task;
-  startCol: number;    // 0-6 within this week
-  endCol: number;      // 0-6 within this week
-  track: number;       // vertical position
+  startCol: number;
+  endCol: number;
+  track: number;
   continuesBefore: boolean;
   continuesAfter: boolean;
 }
@@ -48,14 +50,12 @@ function getSlotsForWeek(week: CellData[], tasks: Task[]): EventSlot[] {
       end: toDate(t.dueDate!),
     }))
     .filter(({ start, end }) => start <= weekEnd && end >= weekStart)
-    // sort: earlier start first, then longer span first
     .sort((a, b) => {
       const ds = a.start.getTime() - b.start.getTime();
       if (ds !== 0) return ds;
       return (b.end.getTime() - b.start.getTime()) - (a.end.getTime() - a.start.getTime());
     });
 
-  // Greedy track assignment: each track holds a list of occupied [startCol, endCol] ranges
   const trackOccupied: Array<Array<[number, number]>> = [];
 
   return candidates.map(({ task, start, end }) => {
@@ -84,28 +84,23 @@ function eventBarStyle(task: Task) {
     return { bg: 'bg-error/15 hover:bg-error/25', text: 'text-error', borderColor: '#ba1a1a' };
   }
   if (task.priority === 'medium') {
-    return { bg: 'bg-secondary/10 hover:bg-secondary/20', text: 'text-secondary', borderColor: '#4648d4' };
+    return { bg: 'bg-primary/10 hover:bg-primary/20', text: 'text-primary', borderColor: 'rgb(var(--c-primary))' };
   }
-  return { bg: 'bg-surface-container hover:bg-surface-container-high', text: 'text-on-surface-variant', borderColor: '#747878' };
+  return { bg: 'bg-surface-container hover:bg-surface-container-high', text: 'text-on-surface-variant', borderColor: 'rgb(var(--c-outline-var))' };
 }
 
-interface Props {
-  tasks: Task[];
-  onViewTask: (id: string) => void;
-  onAddTask: () => void;
-  weekStartsOn?: 0 | 1;
-}
+export default function Calendar() {
+  const navigate = useNavigate();
+  const { tasks, settings } = useAppData();
+  const weekStartsOn = (settings.weekStartsOn ?? 0) as 0 | 1;
 
-export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 0 }: Props) {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
 
-  // Rotate day names so the week starts on the configured day
   const rotatedDayNames = [...DAY_NAMES.slice(weekStartsOn), ...DAY_NAMES.slice(0, weekStartsOn)];
 
   const rawFirstDow = new Date(year, month, 1).getDay();
-  // Adjust firstDow relative to weekStartsOn
   const firstDow = (rawFirstDow - weekStartsOn + 7) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysInPrevMonth = new Date(year, month, 0).getDate();
@@ -156,10 +151,9 @@ export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 
 
   return (
     <div className="p-xl max-w-7xl mx-auto w-full">
-      {/* Header */}
       <div className="flex items-center justify-between mb-xl">
         <div>
-          <h2 className="text-headline-lg text-primary">{MONTH_NAMES[month]} {year}</h2>
+          <h2 className="text-page-title text-on-surface">{MONTH_NAMES[month]} {year}</h2>
           <p className="text-body-md text-on-surface-variant mt-xs">
             {scheduledCount === 0
               ? 'No tasks due this month.'
@@ -179,30 +173,26 @@ export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 
             </button>
           </div>
           <button
-            onClick={onAddTask}
+            onClick={() => navigate('/tasks/new')}
             className="flex items-center gap-sm bg-primary text-on-primary px-lg py-md rounded-lg text-label-md active:scale-95 transition-transform hover:opacity-90"
           >
-            <span className="material-symbols-outlined text-[18px]">add</span>
+            <span className="material-symbols-outlined text-icon-md">add</span>
             Create Task
           </button>
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
-        {/* Day headers */}
+      <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm">
         <div className="grid grid-cols-7 border-b border-outline-variant bg-surface-container-low">
           {rotatedDayNames.map(d => (
             <div key={d} className="py-md text-center text-label-md text-on-surface-variant">{d}</div>
           ))}
         </div>
 
-        {/* Week rows */}
         {weeks.map((week, wi) => {
           const slots = getSlotsForWeek(week, tasks);
           const isLastWeek = wi === weeks.length - 1;
 
-          // Count hidden events per column
           const hiddenByCol = Array(7).fill(0) as number[];
           slots.forEach(s => {
             if (s.track >= MAX_TRACKS) {
@@ -218,7 +208,6 @@ export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 
               className={`relative select-none ${!isLastWeek ? 'border-b border-outline-variant' : ''}`}
               style={{ height: CELL_H }}
             >
-              {/* Cell backgrounds + date numbers */}
               <div className="absolute inset-0 grid grid-cols-7 pointer-events-none">
                 {week.map((cell, ci) => {
                   const isToday = cell.date === todayStr;
@@ -237,13 +226,12 @@ export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 
                 })}
               </div>
 
-              {/* Date numbers row */}
               <div className="absolute inset-x-0 top-0 grid grid-cols-7 pointer-events-none" style={{ height: DATE_ROW_H }}>
                 {week.map((cell, ci) => {
                   const isToday = cell.date === todayStr;
                   return (
-                    <div key={ci} className="flex items-center px-sm" style={{ paddingTop: 6 }}>
-                      <span className={`text-label-sm flex items-center justify-center w-[22px] h-[22px]
+                    <div key={ci} className="flex items-center px-sm pt-1.5">
+                      <span className={`text-label-sm flex items-center justify-center w-5.5 h-5.5
                         ${isToday
                           ? 'bg-primary text-on-primary rounded-full font-bold'
                           : 'text-on-surface-variant'
@@ -256,7 +244,6 @@ export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 
                 })}
               </div>
 
-              {/* Spanning event bars */}
               {slots
                 .filter(s => s.track < MAX_TRACKS)
                 .map((slot, si) => {
@@ -274,8 +261,8 @@ export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 
                     <button
                       key={si}
                       title={slot.task.name}
-                      onClick={() => onViewTask(slot.task.id)}
-                      className={`absolute truncate text-[10px] font-semibold px-xs flex items-center transition-colors ${style.bg} ${style.text}`}
+                      onClick={() => navigate(`/tasks/${slot.task.id}`)}
+                      className={`absolute truncate text-label-xs font-semibold px-xs flex items-center transition-colors ${style.bg} ${style.text}`}
                       style={{
                         left: `calc(${leftPct}% + ${slot.continuesBefore ? 0 : 3}px)`,
                         width: `calc(${widthPct}% - ${(slot.continuesBefore ? 0 : 3) + (slot.continuesAfter ? 0 : 3)}px)`,
@@ -291,13 +278,12 @@ export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 
                   );
                 })}
 
-              {/* "+n more" labels per day */}
               {hiddenByCol.map((hidden, ci) =>
                 hidden > 0 ? (
                   <button
                     key={ci}
                     aria-label={`Show ${hidden} more tasks`}
-                    className="absolute text-[10px] text-on-surface-variant font-semibold hover:text-primary px-sm text-left"
+                    className="absolute text-label-xs text-on-surface-variant font-semibold hover:text-primary px-sm text-left"
                     style={{
                       left: `calc(${(ci / 7) * 100}%)`,
                       width: `calc(100% / 7)`,
@@ -314,7 +300,6 @@ export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 
         })}
       </div>
 
-      {/* Unscheduled tasks */}
       {tasks.filter(t => !t.dueDate).length > 0 && (
         <div className="mt-xl">
           <h3 className="text-headline-sm mb-md text-on-surface-variant">Unscheduled Tasks</h3>
@@ -322,7 +307,7 @@ export default function Calendar({ tasks, onViewTask, onAddTask, weekStartsOn = 
             {tasks.filter(t => !t.dueDate).map(task => (
               <button
                 key={task.id}
-                onClick={() => onViewTask(task.id)}
+                onClick={() => navigate(`/tasks/${task.id}`)}
                 className="text-left bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:shadow-md transition-all duration-150"
               >
                 <span className={`text-label-sm px-sm py-xs rounded uppercase ${PRIORITY_STYLES[task.priority].bg} ${PRIORITY_STYLES[task.priority].text}`}>

@@ -38,7 +38,7 @@ export default function NewProjectModal({ project, onSave, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-lg"
+      className="fixed inset-0 z-modal flex items-center justify-center p-lg"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       {/* Backdrop */}
@@ -54,7 +54,7 @@ export default function NewProjectModal({ project, onSave, onClose }: Props) {
             aria-label="Close dialog"
             className="w-9 h-9 flex items-center justify-center bg-surface-container border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container-high transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            <span className="material-symbols-outlined text-icon-lg">arrow_back</span>
           </button>
 
           <h2 className="text-headline-md text-on-surface font-semibold">
@@ -80,7 +80,7 @@ export default function NewProjectModal({ project, onSave, onClose }: Props) {
                   style={{ backgroundColor: color }}
                 >
                   {form.color === color && (
-                    <span className="material-symbols-outlined text-white text-[15px]">check</span>
+                    <span className="material-symbols-outlined text-white text-icon-sm">check</span>
                   )}
                 </button>
               ))}
@@ -127,10 +127,10 @@ export default function NewProjectModal({ project, onSave, onClose }: Props) {
           <button
             onClick={handleSubmit}
             disabled={!form.name.trim() || saving}
-            className="w-full bg-on-surface text-inverse-on-surface py-md rounded-md text-label-md font-semibold hover:opacity-90 active:scale-[0.98] transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-sm"
+            className="w-full bg-on-surface text-inverse-on-surface py-md rounded-md text-label-md font-semibold hover:opacity-90 active:scale-95 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-sm"
           >
             {saving && (
-              <span className="material-symbols-outlined text-[16px] animate-spin" style={{ animationDuration: '1s' }}>
+              <span className="material-symbols-outlined text-icon-base animate-spin">
                 autorenew
               </span>
             )}

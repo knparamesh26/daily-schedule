@@ -1,33 +1,41 @@
-import type { Task, Project } from '../types';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAppData } from '../context/AppContext';
 import { STATUS_LABELS, PRIORITY_LABELS, PRIORITY_STYLES } from '../types';
+import type { Project } from '../types';
 
-interface Props {
-  task: Task;
-  projects: Project[];
-  onEdit: () => void;
-  onBack: () => void;
-  onMarkDone: () => void;
-  onDelete: () => void;
-  onMoveToProject: (projectName: string) => void;
-}
+const PROGRESS: Record<string, number> = { todo: 0, in_progress: 65, done: 100 };
 
-const PROGRESS: Record<Task['status'], number> = {
-  todo: 0,
-  in_progress: 65,
-  done: 100,
-};
+export default function TaskDetail() {
+  const { taskId } = useParams<{ taskId: string }>();
+  const navigate = useNavigate();
+  const { tasks, projects, handleMarkDone, handleDeleteTask, handleAssignProject } = useAppData();
 
-export default function TaskDetail({ task, projects, onEdit, onBack, onMarkDone, onDelete, onMoveToProject }: Props) {
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return (
+    <div className="p-xl text-center text-on-surface-variant">
+      <p>Task not found.</p>
+      <button onClick={() => navigate('/dashboard')} className="mt-md text-primary hover:underline text-label-md">Back to Dashboard</button>
+    </div>
+  );
+
   const pStyle   = PRIORITY_STYLES[task.priority];
-  const progress = PROGRESS[task.status];
+  const progress = PROGRESS[task.status] ?? 0;
+
+  const onDelete = async () => {
+    await handleDeleteTask(task.id);
+    navigate(-1);
+  };
+
+  const onMarkDone = async () => {
+    await handleMarkDone(task.id);
+  };
 
   return (
     <div className="p-xl max-w-5xl mx-auto w-full">
-      {/* Breadcrumb & actions */}
       <div className="flex justify-between items-center mb-lg">
         <nav className="flex items-center gap-xs text-on-surface-variant text-label-md">
-          <button onClick={onBack} className="hover:text-primary transition-colors">Dashboard</button>
-          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+          <button onClick={() => navigate(-1)} className="hover:text-primary transition-colors">Back</button>
+          <span className="material-symbols-outlined text-icon-base">chevron_right</span>
           <span className="text-on-surface">{task.project || 'Task Details'}</span>
         </nav>
         <div className="flex gap-sm">
@@ -46,16 +54,15 @@ export default function TaskDetail({ task, projects, onEdit, onBack, onMarkDone,
             </button>
           )}
           <button
-            onClick={onEdit}
+            onClick={() => navigate(`/tasks/${task.id}/edit`)}
             className="px-md py-xs bg-primary text-on-primary rounded text-label-md flex items-center gap-xs active:scale-95 transition-transform duration-150"
           >
-            <span className="material-symbols-outlined text-[16px]">edit</span>
+            <span className="material-symbols-outlined text-icon-base">edit</span>
             Edit
           </button>
         </div>
       </div>
 
-      {/* Title + badges */}
       <div className="mb-lg">
         <div className="flex items-center gap-sm flex-wrap mb-sm">
           <span className={`px-sm py-xs rounded-full text-label-sm uppercase font-semibold ${pStyle.bg} ${pStyle.text}`}>
@@ -70,15 +77,12 @@ export default function TaskDetail({ task, projects, onEdit, onBack, onMarkDone,
             {STATUS_LABELS[task.status]}
           </span>
           {task.project && (
-            <span className="px-sm py-xs bg-surface-container rounded-full text-label-sm text-on-surface-variant">
-              {task.project}
-            </span>
+            <span className="px-sm py-xs bg-surface-container rounded-full text-label-sm text-on-surface-variant">{task.project}</span>
           )}
         </div>
         <h2 className="text-headline-lg text-on-surface font-semibold">{task.name}</h2>
       </div>
 
-      {/* Progress bar */}
       <div className="mb-xl bg-surface-container-lowest border border-outline-variant rounded-lg p-lg">
         <div className="flex justify-between items-center mb-sm">
           <span className="text-label-sm text-on-surface-variant uppercase tracking-wider">Progress</span>
@@ -91,40 +95,35 @@ export default function TaskDetail({ task, projects, onEdit, onBack, onMarkDone,
           />
         </div>
         <div className="flex justify-between mt-sm text-label-sm text-on-surface-variant">
-          <span>Not started</span>
-          <span>Complete</span>
+          <span>Not started</span><span>Complete</span>
         </div>
       </div>
 
-      {/* Bento layout */}
       <div className="grid grid-cols-12 gap-lg">
-        {/* Left: description */}
         <div className="col-span-12 lg:col-span-8 space-y-lg">
           <section className="bg-surface-container-lowest border border-outline-variant p-lg rounded-lg shadow-sm">
             <h3 className="text-headline-sm text-on-surface font-semibold mb-md flex items-center gap-sm">
-              <span className="material-symbols-outlined text-on-surface-variant text-[18px]">description</span>
+              <span className="material-symbols-outlined text-on-surface-variant text-icon-md">description</span>
               Description
             </h3>
-            {task.description ? (
-              <p className="text-body-md text-on-surface-variant whitespace-pre-wrap leading-relaxed">{task.description}</p>
-            ) : (
-              <p className="text-body-md text-on-surface-variant/40 italic">No description provided.</p>
-            )}
+            {task.description
+              ? <p className="text-body-md text-on-surface-variant whitespace-pre-wrap leading-relaxed">{task.description}</p>
+              : <p className="text-body-md text-on-surface-variant/40 italic">No description provided.</p>
+            }
           </section>
         </div>
 
-        {/* Right: metadata */}
         <div className="col-span-12 lg:col-span-4">
           <section className="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm overflow-hidden">
             <div className="px-lg py-sm border-b border-outline-variant bg-surface-container-low/60">
               <h3 className="text-label-sm text-on-surface-variant uppercase tracking-wider font-medium">Details</h3>
             </div>
             <dl className="divide-y divide-outline-variant/40">
-              <MetaRow icon="task_alt"      label="Status"     value={STATUS_LABELS[task.status]} />
-              <MetaRow icon="low_priority"  label="Priority"   value={PRIORITY_LABELS[task.priority]} />
-              {task.startDate && <MetaRow icon="event"         label="Start"     value={task.startDate} />}
+              <MetaRow icon="task_alt"       label="Status"   value={STATUS_LABELS[task.status]} />
+              <MetaRow icon="low_priority"   label="Priority" value={PRIORITY_LABELS[task.priority]} />
+              {task.startDate && <MetaRow icon="event"          label="Start"    value={task.startDate} />}
               {task.dueDate   && <MetaRow icon="calendar_today" label="Due"      value={task.dueDate} />}
-              <ProjectRow project={task.project} projects={projects} onChange={onMoveToProject} />
+              <ProjectRow project={task.project} projects={projects} onChange={name => handleAssignProject(task.id, name)} />
             </dl>
           </section>
         </div>
@@ -136,32 +135,25 @@ export default function TaskDetail({ task, projects, onEdit, onBack, onMarkDone,
 function MetaRow({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
     <div className="flex items-center gap-sm px-lg py-sm">
-      <span className="material-symbols-outlined text-on-surface-variant text-[16px] shrink-0">{icon}</span>
+      <span className="material-symbols-outlined text-on-surface-variant text-icon-base shrink-0">{icon}</span>
       <dt className="text-label-sm text-on-surface-variant flex-1">{label}</dt>
       <dd className="text-label-md text-on-surface font-medium">{value}</dd>
     </div>
   );
 }
 
-function ProjectRow({ project, projects, onChange }: {
-  project: string;
-  projects: Project[];
-  onChange: (projectName: string) => void;
-}) {
+function ProjectRow({ project, projects, onChange }: { project: string; projects: Project[]; onChange: (name: string) => void }) {
   return (
     <div className="flex items-center gap-sm px-lg py-sm">
-      <span className="material-symbols-outlined text-on-surface-variant text-[16px] shrink-0">folder</span>
+      <span className="material-symbols-outlined text-on-surface-variant text-icon-base shrink-0">folder</span>
       <dt className="text-label-sm text-on-surface-variant flex-1">Project</dt>
       <dd>
         <select
-          value={project}
-          onChange={e => onChange(e.target.value)}
+          value={project} onChange={e => onChange(e.target.value)}
           className="text-label-md text-on-surface bg-transparent border-none outline-none cursor-pointer hover:text-primary transition-colors text-right appearance-none font-medium"
         >
           <option value="">No Project</option>
-          {projects.map(p => (
-            <option key={p.id} value={p.name}>{p.name}</option>
-          ))}
+          {projects.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
         </select>
       </dd>
     </div>

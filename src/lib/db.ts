@@ -180,6 +180,8 @@ export async function fetchSettings(): Promise<AppSettings> {
     defaultPriority: data.default_priority,
     weekStartsOn: data.week_starts_on,
     darkMode: data.dark_mode,
+    dueTodayReminders: data.due_today_reminders ?? true,
+    weeklyDigest: data.weekly_digest ?? false,
   };
 }
 
