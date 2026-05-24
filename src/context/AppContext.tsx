@@ -9,6 +9,7 @@ import {
   updateTaskProject,
 } from '../lib/db';
 import { useAuth } from './AuthContext';
+import { useNotifications } from '../hooks/useNotifications';
 
 interface AppCtx {
   tasks: Task[];
@@ -50,6 +51,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', settings.darkMode);
   }, [settings.darkMode]);
+
+  useNotifications(tasks, settings, session?.user.id);
 
   const handleSaveTask = async (data: Omit<Task, 'id'>, editingTask?: Task) => {
     try {
@@ -148,6 +151,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleSettingsChange = async (s: AppSettings) => {
+    const enablingNotification =
+      (!settings.dueTodayReminders && s.dueTodayReminders) ||
+      (!settings.weeklyDigest && s.weeklyDigest);
+    if (enablingNotification && 'Notification' in window && Notification.permission === 'default') {
+      // Must be called synchronously within the user gesture chain
+      Notification.requestPermission();
+    }
     const prev = settings;
     setSettings(s);
     try {

@@ -193,6 +193,8 @@ export async function saveSettings(s: AppSettings): Promise<void> {
     default_priority: s.defaultPriority,
     week_starts_on: s.weekStartsOn,
     dark_mode: s.darkMode,
+    due_today_reminders: s.dueTodayReminders,
+    weekly_digest: s.weeklyDigest,
   }, { onConflict: 'user_id' });
   if (error) throw error;
 }
