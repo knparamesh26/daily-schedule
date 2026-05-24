@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useAppData } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import type { AppSettings, Priority } from '../types';
@@ -6,6 +7,16 @@ import { PRIORITY_ORDER, PRIORITY_LABELS } from '../types';
 export default function Settings() {
   const { settings, handleSettingsChange } = useAppData();
   const { session, signOut } = useAuth();
+
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | 'unsupported'>(
+    'Notification' in window ? Notification.permission : 'unsupported'
+  );
+
+  useEffect(() => {
+    if (!('Notification' in window)) return;
+    // Re-read permission after it may have changed
+    setNotifPermission(Notification.permission);
+  }, [settings.dueTodayReminders, settings.weeklyDigest]);
 
   const set = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) =>
     handleSettingsChange({ ...settings, [key]: value });
@@ -91,11 +102,35 @@ export default function Settings() {
         </Section>
 
         <Section title="Notifications" icon="notifications">
+          {notifPermission === 'denied' && (
+            <div className="flex items-center gap-sm px-md py-sm bg-error/5 border-b border-outline-variant/50">
+              <span className="material-symbols-outlined text-error text-icon-base shrink-0">block</span>
+              <p className="text-label-sm text-error">
+                Notifications are blocked by your browser. Enable them in your browser's site settings to receive alerts.
+              </p>
+            </div>
+          )}
+          {notifPermission === 'unsupported' && (
+            <div className="flex items-center gap-sm px-md py-sm bg-surface-container border-b border-outline-variant/50">
+              <span className="material-symbols-outlined text-on-surface-variant text-icon-base shrink-0">info</span>
+              <p className="text-label-sm text-on-surface-variant">
+                Your browser does not support desktop notifications.
+              </p>
+            </div>
+          )}
           <Row label="Due Today Reminders" hint="Notify when tasks are due today.">
-            <Toggle enabled={settings.dueTodayReminders ?? true} onChange={v => set('dueTodayReminders', v)} />
+            <Toggle
+              enabled={settings.dueTodayReminders ?? true}
+              disabled={notifPermission === 'denied' || notifPermission === 'unsupported'}
+              onChange={v => set('dueTodayReminders', v)}
+            />
           </Row>
           <Row label="Weekly Digest" hint="A summary of progress every Monday morning." isLast>
-            <Toggle enabled={settings.weeklyDigest ?? false} onChange={v => set('weeklyDigest', v)} />
+            <Toggle
+              enabled={settings.weeklyDigest ?? false}
+              disabled={notifPermission === 'denied' || notifPermission === 'unsupported'}
+              onChange={v => set('weeklyDigest', v)}
+            />
           </Row>
         </Section>
       </div>
@@ -127,13 +162,15 @@ function Row({ label, hint, isLast, children }: { label: string; hint?: string; 
   );
 }
 
-function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ enabled, disabled, onChange }: { enabled: boolean; disabled?: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
-      onClick={() => onChange(!enabled)}
+      onClick={() => !disabled && onChange(!enabled)}
       aria-pressed={enabled}
+      disabled={disabled}
       className={`relative inline-flex items-center h-5.5 w-10 rounded-full transition-colors duration-200 focus:outline-none
-        ${enabled ? 'bg-primary' : 'bg-surface-container-high'}`}
+        ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
+        ${enabled && !disabled ? 'bg-primary' : 'bg-surface-container-high'}`}
     >
       <span
         className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200 ${enabled ? 'translate-x-5.5' : 'translate-x-0.75'}`}
